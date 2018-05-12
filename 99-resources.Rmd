@@ -1,0 +1,30 @@
+---
+title: "Advice, links, and useful resources"
+output: html_document
+---
+
+<http://mc-stan.org/users/documentation/>
+
+Stan Best Practices:
+<https://github.com/stan-dev/stan/wiki/Stan-Best-Practices>
+
+Prior Choice Recommendations:
+<https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations>
+
+Case studies:
+<http://mc-stan.org/users/documentation/case-studies.html>
+
+Tutorials, books, online video courses, and presentations:
+<http://mc-stan.org/users/documentation/tutorials.html>
+
+Forums:
+<http://discourse.mc-stan.org/>
+
+
+Morey, R. D., Hoekstra, R., Rouder, J., Lee, M. D., and Wagenmakers, E. (2016). The fallacy of placing confidence in confidence intervals. Psychonomic Bulletin & Review. 23(1), 103–123.
+
+##########
+
+think it, quantify it, say it
+
+https://chi-feng.github.io/mcmc-demo/

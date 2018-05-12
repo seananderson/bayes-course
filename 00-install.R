@@ -19,5 +19,7 @@ sessionInfo()
 # Text) and would rather use that, that's fine too.
 #
 # Install the following packages:
-install.packages(c("tidyverse", "rstan", "rstanarm", "brms", "rmarkdown"),
+install.packages(c("tidyverse", "rstan", "rstanarm", "brms", "rmarkdown",
+  "manipulate", "shiny", "remotes", "usethis"),
   dependencies = TRUE)
+remotes::install_github("seananderson/ggsidekick")

@@ -1,0 +1,49 @@
+# ----------------------------------------------------------------
+set.seed(123)
+mu <- 1
+sigma <- 2
+dat <- rnorm(40, mean = mu, sd = sigma) # our simulated data
+plot(dat)
+plot(1, xlim = c(0, 100), ylim = c(-2, 2), type = "n")
+jump_sd <- 0.5
+i <- 1
+previous_proposal <- 0
+# ----------------------------------------------------------------
+
+# ----------------------------------------------------------------
+# Run the section from here to the bottom repeatedly:
+(proposal <- rnorm(1, previous_proposal, jump_sd))
+# ----------------------------------------------------------------
+
+(log_like_proposal <- sum(dnorm(dat, mean = proposal, sd = sigma, log = TRUE)))
+(log_like_previous <- sum(dnorm(dat, mean = previous_proposal, sd = sigma, log = TRUE)))
+# ----------------------------------------------------------------
+
+(log_like_prior_proposal <- dnorm(proposal, mean = 0, sd = 3, log = TRUE))
+(log_like_prior_previous <- dnorm(previous_proposal, mean = 0, sd = 3, log = TRUE))
+# ----------------------------------------------------------------
+
+# Combine the log-prior with the log-likelihood to get a value that is
+# proportional to the posterior probability of that parameter value given the
+# data:
+(log_posterior_proposal <- log_like_prior_proposal + log_like_proposal)
+(log_posterior_previous <- log_like_prior_previous + log_like_previous)
+# ----------------------------------------------------------------
+
+# Calculate the ratio of the proposal and previous probabilities:
+(prob_ratio <- exp(log_posterior_proposal) / exp(log_posterior_previous))
+# ----------------------------------------------------------------
+
+# If the probability ratio is > 1, then always accept the new parameter values.
+# If the probability ratio is < 1, then accept the new parameter values in
+# proportion to the ratio.
+if (runif(1) < prob_ratio) {
+  (previous_proposal <- proposal)
+} else {
+  (previous_proposal <- previous_proposal)
+}
+# ----------------------------------------------------------------
+
+points(i, previous_proposal)
+i <- i + 1
+# ----------------------------------------------------------------

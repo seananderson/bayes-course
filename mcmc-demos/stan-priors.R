@@ -1,0 +1,101 @@
+library(ggplot2)
+library(rstanarm)
+theme_set(theme_light())
+
+mcmc_example <- function(
+  seed = 1,
+  intercept = 3,
+  slope = 3,
+  sigma = 2, # the true residual SD
+  .n = 30, # number of data points to simulate
+  prior_slope_mean = 0,
+  prior_slope_sd = 3,
+  prior_intercept_sd = 10,
+  prior_aux_sd = 3,
+  reps = 1000 # the length of each MCMC chain
+) {
+
+  set.seed(seed)
+  x <- runif(.n, -2, 2)
+  d <- data.frame(x = x, y = rnorm(.n, mean = intercept + slope * x, sd = sigma))
+
+  # temp_path <- file.path(tempdir(), "stan-example")
+  # dir.create(temp_path, showWarnings = FALSE)
+  # sink(file.path(temp_path, "ignore.txt"))
+  m <- stan_glm(y ~ x, d, iter = reps, chains = 1,
+    family = gaussian(link = "identity"), refresh = 0,
+    prior = normal(prior_slope_mean, prior_slope_sd, autoscale = FALSE),
+    prior_intercept = normal(0, prior_intercept_sd, autoscale = FALSE),
+    prior_aux = normal(0, prior_aux_sd, autoscale = FALSE),
+    chains = 1, cores = 1
+    )
+  # sink()
+
+  e <- as.data.frame(m)
+
+  xx <- seq(-30, 30, length.out = 1000)
+
+  slope_prior <- data.frame(x = xx,
+    y = dnorm(xx, mean = prior_slope_mean, sd = prior_slope_sd))
+
+  intercept_prior <- data.frame(x = xx,
+    y = dnorm(xx, mean = 0, sd = prior_intercept_sd))
+
+  xx0 <- seq(0, 30, length.out = 1000)
+  sigma_prior <-  data.frame(x = xx0,
+    y = extraDistr::dhnorm(xx0, sigma = prior_aux_sd))
+
+  .range <- c(-4, 4)
+
+  g1 <- ggplot(e, aes(`(Intercept)`, ..density..)) + geom_histogram(binwidth = 0.2) +
+    geom_line(data = intercept_prior, aes(x, y), col = "blue") +
+    coord_cartesian(xlim = .range) +
+    geom_vline(xintercept = intercept, col = "red")
+
+  g2 <- ggplot(e, aes(x, ..density..)) + geom_histogram(binwidth = 0.2) +
+    geom_line(data = slope_prior, aes(x, y), col = "blue") +
+    coord_cartesian(xlim = .range) +
+    geom_vline(xintercept = slope, col = "red")
+
+  g3 <- ggplot(e, aes(sigma, ..density..)) + geom_histogram(binwidth = 0.2) +
+    geom_line(data = sigma_prior, aes(x, y), col = "blue") +
+    coord_cartesian(xlim = c(0, max(.range))) +
+    geom_vline(xintercept = sigma, col = "red")
+
+  nd <- data.frame(x = seq(-2, 2, length.out = 200))
+  pp <- posterior_linpred(m, newdata = nd, draws = 100)
+  pp2 <- reshape2::melt(pp)
+  pp2$x <- rep(nd$x, each = 100)
+
+  g4 <- ggplot(d, aes(x = x, y = y)) +
+    geom_point() +
+    geom_line(data = pp2, aes(x, value, group = iterations), inherit.aes = FALSE,
+      alpha = 0.5, col = "grey30") +
+    geom_abline(slope = slope, intercept = intercept,
+      col = "red")
+
+  gridExtra::grid.arrange(g1, g2, g3, g4, ncol = 2)
+}
+
+library(manipulate)
+manipulate(
+  mcmc_example(
+    seed = seed,
+    intercept = intercept,
+    slope = slope,
+    sigma = sigma,
+    .n = .n,
+    prior_slope_mean = prior_slope_mean,
+    prior_slope_sd = prior_slope_sd,
+    prior_intercept_sd = prior_intercept_sd,
+    prior_aux_sd = prior_aux_sd),
+  seed = slider(1, 1000, 42, step = 1),
+  intercept = slider(-5, 5, 0, step = 0.2),
+  slope = slider(-1.6, 1.6, 0.8, step = 0.2),
+  sigma = slider(0.1, 8, 1, step = 0.1),
+  .n = slider(2, 200, 30),
+  prior_slope_mean = slider(-5, 5, 0, step = 0.5),
+  prior_slope_sd = slider(0.2, 10, 2, step = 0.2),
+  prior_intercept_sd = slider(0.2, 20, 10, step = 0.2),
+  prior_aux_sd = slider(0.2, 10, 3, step = 0.2))
+

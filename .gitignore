@@ -38,3 +38,4 @@ vignettes/*.pdf
 *.rds
 *.png
 *.html
+.Rproj.user
