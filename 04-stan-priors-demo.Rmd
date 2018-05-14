@@ -1,3 +1,10 @@
+---
+title: "Demo of the influce of priors in a basic Stan regression"
+author: "Sean Anderson"
+output: html_document
+---
+
+```{r}
 library(ggplot2)
 library(rstanarm)
 theme_set(theme_light())
@@ -12,16 +19,13 @@ mcmc_example <- function(
   prior_slope_sd = 3,
   prior_intercept_sd = 10,
   prior_aux_sd = 3,
-  reps = 1000 # the length of each MCMC chain
+  reps = 800 # the length of each MCMC chain
 ) {
 
   set.seed(seed)
-  x <- runif(.n, -2, 2)
+  x <- arm::rescale(runif(.n, -2, 2))
   d <- data.frame(x = x, y = rnorm(.n, mean = intercept + slope * x, sd = sigma))
 
-  # temp_path <- file.path(tempdir(), "stan-example")
-  # dir.create(temp_path, showWarnings = FALSE)
-  # sink(file.path(temp_path, "ignore.txt"))
   m <- stan_glm(y ~ x, d, iter = reps, chains = 1,
     family = gaussian(link = "identity"), refresh = 0,
     prior = normal(prior_slope_mean, prior_slope_sd, autoscale = FALSE),
@@ -29,11 +33,10 @@ mcmc_example <- function(
     prior_aux = normal(0, prior_aux_sd, autoscale = FALSE),
     chains = 1, cores = 1
     )
-  # sink()
 
   e <- as.data.frame(m)
 
-  xx <- seq(-30, 30, length.out = 1000)
+  xx <- seq(-30, 30, length.out = 500)
 
   slope_prior <- data.frame(x = xx,
     y = dnorm(xx, mean = prior_slope_mean, sd = prior_slope_sd))
@@ -41,7 +44,7 @@ mcmc_example <- function(
   intercept_prior <- data.frame(x = xx,
     y = dnorm(xx, mean = 0, sd = prior_intercept_sd))
 
-  xx0 <- seq(0, 30, length.out = 1000)
+  xx0 <- seq(0, 30, length.out = 500)
   sigma_prior <-  data.frame(x = xx0,
     y = extraDistr::dhnorm(xx0, sigma = prior_aux_sd))
 
@@ -62,7 +65,7 @@ mcmc_example <- function(
     coord_cartesian(xlim = c(0, max(.range))) +
     geom_vline(xintercept = sigma, col = "red")
 
-  nd <- data.frame(x = seq(-2, 2, length.out = 200))
+  nd <- data.frame(x = seq(-2, 2, length.out = 4))
   pp <- posterior_linpred(m, newdata = nd, draws = 100)
   pp2 <- reshape2::melt(pp)
   pp2$x <- rep(nd$x, each = 100)
@@ -99,3 +102,4 @@ manipulate(
   prior_intercept_sd = slider(0.2, 20, 10, step = 0.2),
   prior_aux_sd = slider(0.2, 10, 3, step = 0.2))
 
+```

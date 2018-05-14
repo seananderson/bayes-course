@@ -1,4 +1,20 @@
-# ----------------------------------------------------------------
+---
+title: "The Metropolis MCMC algorithm in R"
+author: "Sean Anderson"
+output: html_document
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.asp = 0.618,
+  fig.align = "center"
+)
+```
+
+```{r}
 set.seed(123)
 mu <- 1
 sigma <- 2
@@ -8,9 +24,9 @@ plot(1, xlim = c(0, 100), ylim = c(-2, 2), type = "n")
 jump_sd <- 0.5
 i <- 1
 previous_proposal <- 0
-# ----------------------------------------------------------------
+```
 
-# ----------------------------------------------------------------
+```{r}
 # Run the section from here to the bottom repeatedly:
 (proposal <- rnorm(1, previous_proposal, jump_sd))
 # ----------------------------------------------------------------
@@ -45,5 +61,5 @@ if (runif(1) < prob_ratio) {
 # ----------------------------------------------------------------
 
 points(i, previous_proposal)
-i <- i + 1
-# ----------------------------------------------------------------
+i <- i + 1 # update counter for next time
+```

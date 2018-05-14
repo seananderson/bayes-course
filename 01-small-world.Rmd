@@ -80,7 +80,7 @@ prior <- dunif(p, 0, 1) / length(p)
 # prior <- dnorm(p, mean = 0.5, sd = 0.25)
 # prior <- dbeta(p, shape1 = 3, shape2 = 2)
 # prior <- dnorm(p, mean = 0.5, sd = 0.25);prior[1:100] <- 0
-# prior <- c(1:150, 150:1)
+# prior <- c(1:250, 250:1)
 prior <- prior / sum(prior)
 
 likelihood <- dbinom(sum(dat), size = length(dat), prob = p)
