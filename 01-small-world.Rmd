@@ -1,42 +1,121 @@
 ---
+title: "An introduction to Bayesian updating with a grid search approach"
+author: "Sean Anderson"
+output: html_document
 ---
 
-```{r}
-library(tidyverse)
-theme_set(ggsidekick::theme_sleek())
-p <- seq(0, 1, length.out = 200)
-prior <- dunif(p, 0, 1) / length(p)
+```{r, echo=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.asp = 0.618,
+  fig.align = "center"
+)
 ```
 
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+theme_set(theme_light())
+```
+
+# Bayesian updating of the posterior
+
 ```{r}
-dat <- c("W", "L")
+dat <- c("L", "W", "W", "W", "W", "W", "L", "W", "W", "L", "W", "W")
+length(dat)
 dat <- ifelse(dat == "W", 1, 0)
-toss <- 1
+
+N <- 100
+p <- seq(0, 1, length.out = N)
+
+# --------------------
+# try different priors:
+prior <- dunif(p, 0, 1)
+# prior <- dbinom(2, size = 3, prob = p)
+# prior <- dbinom(7, size = 10, prob = p)
+# prior <- dbinom(71, size = 100, prob = p)
+# prior <- dbinom(5, size = 10, prob = p)
+# prior <- dnorm(p, mean = 0.5, sd = 0.3)
+# prior <- dbeta(p, shape1 = 3, shape2 = 2)
+# prior <- dnorm(p, mean = 0.5, sd = 0.25);prior[1:100] <- 0
+# --------------------
+
+prior <- prior / sum(prior) # make sure it sums to 1
+
+out <- list()
+for (i in seq_along(dat)) {
+  likelihood <- dbinom(sum(dat[i]), size = 1, prob = p) # data likelihood
+  posterior <- likelihood * prior # Bayes rule numerator
+  posterior <- posterior / sum(posterior) # make sure it sums to 1
+  out[[i]] <- data.frame(p, prior, posterior, toss = i) # save it
+  prior <- posterior # for next time
+}
+out <- bind_rows(out)
+
+ggplot(out, aes(x = p, ymax = posterior, ymin = 0, group = toss)) +
+  geom_ribbon(alpha = 0.3, fill = "red") +
+  geom_ribbon(aes(x = p, ymax = prior, ymin = 0), alpha = 0.3) +
+  coord_cartesian(expand = FALSE) +
+  xlab("Proportion water") +
+  ylab("Probability density")  +
+  facet_wrap(~toss)
+```
+
+In the above figure, the grey represents the prior distribution and red represents the posterior distribution. In each panel, we add one observation to our data, take the posterior from the previous calculation and turn it into our new prior, multiply the prior by the data likelihood, and divide that by the sum of all likelihood * prior to make sure it sums to 1.
+
+# Fitting all the data at once
+
+In the last example we updated are posterior with each additional piece of data. Let's do our calculations in a way more consistent with how we would probably do this experiment. We'll calculate the posterior distribution including all the data at once along with our initial prior.
+
+Again, try playing with the prior.
+
+```{r}
+N <- 500 # bigger for smoother histograms below
+p <- seq(0, 1, length.out = N)
+
+prior <- dunif(p, 0, 1) / length(p)
+# prior <- dbinom(2, size = 3, prob = p)
+# prior <- dnorm(p, mean = 0.5, sd = 0.25)
+# prior <- dbeta(p, shape1 = 3, shape2 = 2)
+# prior <- dnorm(p, mean = 0.5, sd = 0.25);prior[1:100] <- 0
+# prior <- c(1:150, 150:1)
+prior <- prior / sum(prior)
 
 likelihood <- dbinom(sum(dat), size = length(dat), prob = p)
 posterior <- likelihood * prior
 posterior <- posterior / sum(posterior)
 
-d <- tibble(toss = toss, posterior = posterior, prior = prior)
-ggplot(d, aes(x = p, ymax = posterior, ymin = 0)) +
+ggplot(tibble(posterior, prior), 
+  aes(x = p, ymax = posterior, ymin = 0)) +
   geom_ribbon(alpha = 0.2, fill = "red") +
   geom_ribbon(aes(x = p, ymax = prior, ymin = 0), alpha = 0.2) +
   coord_cartesian(expand = FALSE, ylim = c(0, 1.03 * max(c(posterior, prior)))) +
   xlab("Proportion water") +
   ylab("Probability density")
-prior <- posterior
 ```
+
+Does that look the same as the final panel of the previous plot? 
+
+# Summarizing the posterior with samples
+
+If we sample from the values of `p` in proportion to their probability, we will be drawing samples from the posterior. This makes it really easy to summarize the posterior however we would like. It's just a matter of manipulating the samples. This is also good practice because next we will be using Markov chain Monte Carlo (MCMC), which will always return samples from the posterior.
 
 ```{r}
 post_samples <- sample(p, prob = posterior, size = 2000, replace = TRUE)
 ```
 
+Now we can make a histogram of the posterior distribution samples.
+
 ```{r}
 g <- ggplot(tibble(post_samples), aes(post_samples)) + 
-  geom_histogram(bins = 30, alpha = 0.5, fill = "blue") +
+  geom_histogram(bins = 30, alpha = 0.4, fill = "red") +
   coord_cartesian(expand = FALSE)
 g
 ```
+
+We can look at the means or the median of the posterior as one way to summarize it. 
 
 ```{r}
 q <- mean(post_samples)
@@ -46,11 +125,14 @@ q_median <- median(post_samples)
 g + geom_vline(xintercept = q) + geom_vline(xintercept = q_median, lty = 2)
 ```
 
+We can also calculate quantifiable credible intervals. For this we just use the `quantile()` function to figure out the appropriate thresholds for a given probability. Here we will calculate an 80% credible interval.
 
 ```{r}
 q <- quantile(post_samples, probs = c(0.1, 0.9))
 g + geom_vline(xintercept = q)
 ```
+
+The Highest Posterior Density (HPD) interval is the short as possible credible interval with the appropriate probability coverage. It's harder to calculate, so we will rely on an existing function. This is probably much more rarely used than the quantile credible intervals. 
 
 ```{r}
 q_hpd <- coda::HPDinterval(coda::as.mcmc(post_samples), prob = 0.8)
@@ -59,96 +141,26 @@ q_hpd
 g + geom_vline(xintercept = q) + geom_vline(xintercept = q_hpd, lty = 2)
 ```
 
+We can also calculate one-sided credible intervals. For example, we could say that there is a 0.8 probability of there being [blank] or more proportion water on the globe (conditional on our model being reasonable and the data we collected).
+
+```{r}
+q <- sort(post_samples)[round(0.2 * length(post_samples))]
+q
+g + geom_vline(xintercept = q)
+```
+
+Or we can go even further than just calculating credible intervals. For example, we can calculate how much probability "mass" is above 0.5. This tells us the probability that there is more than 50% water on the globe, (conditional on ...).
+
 ```{r}
 sum(post_samples > 0.5) / length(post_samples)
 mean(post_samples > 0.5)
 g + geom_vline(xintercept = 0.5)
 ```
 
+We can also easily calculate how much probability there is between specific values. For example, what is the probability that there is between 60 and 80% water?
+
 ```{r}
 mean(post_samples > 0.6 & post_samples < 0.8)
 g + geom_vline(xintercept = c(0.6, 0.8))
-```
-
-```{r}
-q <- sort(post_samples)[round(0.2 * length(post_samples))]
-g + geom_vline(xintercept = q)
-```
-
-
-
-
-# -------------
-
-```{r}
-p <- seq(0, 1, length.out = 300)
-# -------
-
-# prior <- dunif(p, 0, 1) / length(p)
-# prior <- dbinom(2, size = 3, prob = p)
-# prior <- dnorm(p, mean = 0.5, sd = 0.25)
-prior <- dbeta(p, shape1 = 3, shape2 = 2)
-# prior <- dnorm(p, mean = 0.5, sd = 0.25);prior[1:100] <- 0
-# prior <- c(1:150, 150:1)
-
-# -------
-dat <- c("W", "L", "W", "L", "W", "W")
-# -------
-
-dat <- ifelse(dat == "W", 1, 0)
-prior <- prior / sum(prior)
-
-likelihood <- dbinom(sum(dat), size = length(dat), prob = p)
-posterior <- likelihood * prior
-posterior <- posterior / sum(posterior)
-
-d <- tibble(posterior = posterior, prior = prior)
-ggplot(d, aes(x = p, ymax = posterior, ymin = 0)) +
-  geom_ribbon(alpha = 0.2, fill = "red") +
-  geom_ribbon(aes(x = p, ymax = prior, ymin = 0), alpha = 0.2) +
-  coord_cartesian(expand = FALSE, ylim = c(0, 1.03 * max(c(posterior, prior)))) +
-  xlab("Proportion water") +
-  ylab("Probability density")
-```
-
-```{r}
-# set.seed(7)
-dat <- c("L", "W", "W", "W", "W", "W", "L", "W", "W", "L", "W", "W")
-length(dat)
-dat <- ifelse(dat == "W", 1, 0)
-dat <- rbinom(15, 1, 0.71)
-
-N <- 200
-# p <- seq(0, 1, length.out = N)
-prior <- dunif(p, 0, 1)
-# prior <- dbinom(2, size = 3, prob = p)
-# prior <- dbinom(7, size = 10, prob = p)
-# prior <- dbinom(71, size = 100, prob = p)
-# prior <- dbinom(5, size = 10, prob = p)
-# prior <- dnorm(p, mean = 0.5, sd = 0.3)
-# prior <- dbeta(p, shape1 = 3, shape2 = 2)
-# prior <- dnorm(p, mean = 0.5, sd = 0.25);prior[1:100] <- 0
-
-prior <- prior / sum(prior)
-
-out <- list()
-for (i in seq_along(dat)) {
-  likelihood <- dbinom(sum(dat[i]), size = 1, prob = p)
-  posterior <- likelihood * prior
-  posterior <- posterior / sum(posterior)
-  out[[i]] <- data.frame(p, prior, posterior, toss = i)
-  prior <- posterior # for next time
-}
-out <- bind_rows(out)
-rm(prior, posterior, likelihood)
-
-ggplot(out, aes(x = p, ymax = posterior, ymin = 0, group = toss)) +
-  geom_ribbon(alpha = 0.1, fill = "blue") +
-  geom_ribbon(aes(x = p, ymax = prior, ymin = 0), alpha = 0.08) +
-  coord_cartesian(expand = FALSE) +
-  xlab("Proportion water") +
-  ylab("Probability density")  +
-  facet_wrap(~toss) +
-  geom_vline(xintercept = 0.71, lty = 2, col = "grey60")
 ```
 
