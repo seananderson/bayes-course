@@ -1,5 +1,5 @@
 data {
-  int N;               // number of observations
+  int<lower=1> N;      // number of observations
   vector[N] y;         // response
   vector[N] x;         // a predictor
   real<lower=0> tau;   // measurement noise [This is new.]
@@ -18,4 +18,10 @@ model {
   // [optional prior on x_true could go here]
   x ~ normal(x_true, tau);     // measurement model  [This is new.]
   y ~ normal(alpha + x_true * beta, sigma); // data likelihood  [This has changed.]
+}
+generated quantities {
+  vector[N] posterior_predictions;
+  for (i in 1:N) {
+    posterior_predictions[i] = normal_rng(alpha + x_true[i] * beta, sigma);
+  }
 }

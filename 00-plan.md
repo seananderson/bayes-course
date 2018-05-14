@@ -13,7 +13,7 @@ output: html_document
 
 4. Learn how to assess the relative contribution of priors vs. the data. Learn the difference between weakly informative and informative priors. Learn what some common choices of weakly informative priors are.
 
-5. Learn the basics of Stan model syntax and how to interact with Stan in R. Learn to incorporate measurement error with a simple modification of a Stan model.
+5. Learn the basics of Stan model syntax and how to interact with Stan in R. Experience one 'non-standard' model: a population-growth time series model.
 
 6. Leave with some ideas for how to describe Bayesian models in publications and where to find more information.
 
@@ -50,7 +50,7 @@ output: html_document
   - look at the syntax and the code sections of a Stan model
   - call the Stan model from R
   - extract the posterior samples and make similar plots as before
-  - add measurement error to the Stan model and re-sample
+  - fit a population-growth time series model in Stan
 
 6. Applied Bayesian modeling standards, words of wisdom, and resources (slides)
   - standards for iterations, warmup, chains, and assessing convergence

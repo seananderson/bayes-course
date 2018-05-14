@@ -4,12 +4,12 @@
 ```{r}
 library(tidyverse)
 theme_set(ggsidekick::theme_sleek())
-p <- seq(0, 1, length.out = 500)
+p <- seq(0, 1, length.out = 200)
 prior <- dunif(p, 0, 1) / length(p)
 ```
 
 ```{r}
-dat <- c("W", "L", "W", "W", "L", "W")
+dat <- c("W", "L")
 dat <- ifelse(dat == "W", 1, 0)
 toss <- 1
 
@@ -87,12 +87,12 @@ p <- seq(0, 1, length.out = 300)
 # prior <- dunif(p, 0, 1) / length(p)
 # prior <- dbinom(2, size = 3, prob = p)
 # prior <- dnorm(p, mean = 0.5, sd = 0.25)
-# prior <- dbeta(p, shape1 = 3, shape2 = 2)
-prior <- dnorm(p, mean = 0.5, sd = 0.25);prior[1:100] <- 0
+prior <- dbeta(p, shape1 = 3, shape2 = 2)
+# prior <- dnorm(p, mean = 0.5, sd = 0.25);prior[1:100] <- 0
 # prior <- c(1:150, 150:1)
 
 # -------
-dat <- c("W", "L", "W", "L")
+dat <- c("W", "L", "W", "L", "W", "W")
 # -------
 
 dat <- ifelse(dat == "W", 1, 0)
@@ -110,3 +110,45 @@ ggplot(d, aes(x = p, ymax = posterior, ymin = 0)) +
   xlab("Proportion water") +
   ylab("Probability density")
 ```
+
+```{r}
+# set.seed(7)
+dat <- c("L", "W", "W", "W", "W", "W", "L", "W", "W", "L", "W", "W")
+length(dat)
+dat <- ifelse(dat == "W", 1, 0)
+dat <- rbinom(15, 1, 0.71)
+
+N <- 200
+# p <- seq(0, 1, length.out = N)
+prior <- dunif(p, 0, 1)
+# prior <- dbinom(2, size = 3, prob = p)
+# prior <- dbinom(7, size = 10, prob = p)
+# prior <- dbinom(71, size = 100, prob = p)
+# prior <- dbinom(5, size = 10, prob = p)
+# prior <- dnorm(p, mean = 0.5, sd = 0.3)
+# prior <- dbeta(p, shape1 = 3, shape2 = 2)
+# prior <- dnorm(p, mean = 0.5, sd = 0.25);prior[1:100] <- 0
+
+prior <- prior / sum(prior)
+
+out <- list()
+for (i in seq_along(dat)) {
+  likelihood <- dbinom(sum(dat[i]), size = 1, prob = p)
+  posterior <- likelihood * prior
+  posterior <- posterior / sum(posterior)
+  out[[i]] <- data.frame(p, prior, posterior, toss = i)
+  prior <- posterior # for next time
+}
+out <- bind_rows(out)
+rm(prior, posterior, likelihood)
+
+ggplot(out, aes(x = p, ymax = posterior, ymin = 0, group = toss)) +
+  geom_ribbon(alpha = 0.1, fill = "blue") +
+  geom_ribbon(aes(x = p, ymax = prior, ymin = 0), alpha = 0.08) +
+  coord_cartesian(expand = FALSE) +
+  xlab("Proportion water") +
+  ylab("Probability density")  +
+  facet_wrap(~toss) +
+  geom_vline(xintercept = 0.71, lty = 2, col = "grey60")
+```
+
