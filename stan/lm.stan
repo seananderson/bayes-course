@@ -21,6 +21,6 @@ generated quantities {
 
   for (i in 1:N) {
     posterior_predictions[i] = normal_rng(alpha + x[i] * beta, sigma);
-    log_lik[i] = normal_lpdf(y | alpha + x * beta, sigma);
+    log_lik[i] = normal_lpdf(y[i] | alpha + x[i] * beta, sigma);
   }
 }

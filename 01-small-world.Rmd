@@ -1,7 +1,10 @@
 ---
 title: "An introduction to Bayesian updating with a grid search approach"
 author: "Sean Anderson"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 ```{r, echo=FALSE}
@@ -23,11 +26,11 @@ theme_set(theme_light())
 # Bayesian updating of the posterior
 
 ```{r}
-dat <- c("L", "W", "W", "W", "W", "W", "L", "W", "W", "L", "W", "W")
+dat <- c("L", "W", "W")
 length(dat)
 dat <- ifelse(dat == "W", 1, 0)
 
-N <- 100
+N <- 200
 p <- seq(0, 1, length.out = N)
 
 # --------------------
@@ -67,7 +70,7 @@ In the above figure, the grey represents the prior distribution and red represen
 
 # Fitting all the data at once
 
-In the last example we updated are posterior with each additional piece of data. Let's do our calculations in a way more consistent with how we would probably do this experiment. We'll calculate the posterior distribution including all the data at once along with our initial prior.
+In the last example we updated are posterior with each additional piece of data. Let's do our calculations in a way that is more consistent with how we would probably do this experiment. We'll calculate the posterior distribution including all the data at once along with our initial prior.
 
 Again, try playing with the prior.
 

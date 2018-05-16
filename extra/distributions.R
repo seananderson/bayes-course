@@ -134,3 +134,15 @@ ggplot(tibble(x,
 ggsave("extra/dist-uniform.pdf", width = 6, height = 6 * 0.618)
 
 
+x <- runif(1e6, min = 0, max = 10)
+ggplot(tibble(x), aes(x)) +
+  geom_histogram(fill = fill, col = col, breaks = seq(0, 10, length.out = 40)) +
+  theme_void()
+ggsave("extra/dist-uniform-samples.pdf", width = 6, height = 6 * 0.618)
+
+ggplot(tibble(x), aes(exp(x))) +
+  geom_histogram(fill = fill, col = col, breaks = seq(exp(0), exp(10), length.out = 40)) +
+  theme_void()
+ggsave("extra/dist-uniform-exp-samples.pdf", width = 6, height = 6 * 0.618)
+
+

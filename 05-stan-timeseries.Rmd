@@ -1,5 +1,5 @@
 ---
-title: "An introduction to Stan programming"
+title: "Fitting a timeseries model with Stan"
 author: "Sean Anderson"
 output:
   html_document:
@@ -50,7 +50,7 @@ population sizes and global extinction risk are unrelated. Ecology Letters, 9
 Let's read in the data:
 
 ```{r}
-d <- read.csv("data-raw/grey-heron.csv") %>% as_tibble() %>% 
+d <- read.csv("data/grey-heron.csv") %>% as_tibble() %>% 
   select(sample_year, population_untransformed) %>% 
   rename(year = sample_year, abund_index = population_untransformed)
 ggplot(d, aes(year, log(abund_index))) +
@@ -68,7 +68,7 @@ Anderson, S.C., Branch, T.A., Cooper, A.B., and Dulvy, N.K. 2017. Black-swan eve
 You can see the basic model we will work with in the file:
 
 ```{r}
-show_file("stan-models/gompertz.stan")
+show_file("stan/gompertz.stan")
 ```
 
 Take a look at the model and make sure you understand it. This is fundamentally a timeseries model. How is it different from the other models we have worked with so far?
@@ -76,7 +76,7 @@ Take a look at the model and make sure you understand it. This is fundamentally 
 We can fit that model with Stan:
 
 ```{r, message=FALSE, warning=FALSE}
-m <- stan("stan-models/gompertz.stan",
+m <- stan("stan/gompertz.stan",
   data = list(N = nrow(d), y = log(d$abund_index), nu_rate = 0.01),
   iter = 2000)
 ```
@@ -117,7 +117,7 @@ fluctuations, variation and development over a half-century. Illinois
 Biological Monographs, 52:1-136.
 
 ```{r}
-d_hw <- read.csv("data-raw/house-wren.csv") %>% as_tibble() %>% 
+d_hw <- read.csv("data/house-wren.csv") %>% as_tibble() %>% 
   select(sample_year, population_untransformed) %>% 
   rename(year = sample_year, abund_index = population_untransformed)
 ggplot(d_hw, aes(year, log(abund_index))) +
@@ -125,7 +125,7 @@ ggplot(d_hw, aes(year, log(abund_index))) +
 ```
 
 ```{r, message=FALSE, warning=FALSE}
-m_hw <- stan("stan-models/gompertz.stan", 
+m_hw <- stan("stan/gompertz.stan", 
   data = list(N = nrow(d_hw), y = log(d_hw$abund_index), nu_rate = 0.01))
 ```
 
@@ -188,9 +188,9 @@ cowplot::plot_grid(g1, g2, g3)
 ```
 
 ```{r, message=FALSE, warning=FALSE}
-m_weaker_prior <- stan("stan-models/gompertz.stan",
+m_weaker_prior <- stan("stan/gompertz.stan",
   data = list(N = nrow(d), y = log(d$abund_index), nu_rate = 0.005))
-m_stronger_prior <- stan("stan-models/gompertz.stan",
+m_stronger_prior <- stan("stan/gompertz.stan",
   data = list(N = nrow(d), y = log(d$abund_index), nu_rate = 0.05))
 ```
 

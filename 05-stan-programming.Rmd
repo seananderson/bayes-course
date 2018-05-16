@@ -55,24 +55,29 @@ ggplot(dat, aes(x, y)) + geom_point()
 ```
 
 ```{r}
-show_file("stan-models/lm.stan")
+show_file("stan/lm.stan")
 ```
 
-```{r}
-
-```
-
-The first time we run the next code chunk, Stan will translate our model into C++ and compile it. This will take little bit of time. After that, assuming we set `rstan_options(auto_write = TRUE)`, Stan will avoid recompiling the model and less something in the model code changes.
+The first time we run the next code chunk, Stan will translate our model into C++ and compile it. This will take little while. After that, assuming we set `rstan_options(auto_write = TRUE)`, Stan will avoid recompiling the model and less something in the model code changes.
 
 Let's sample from the model now:
 
 ```{r}
-fit <- stan("stan-models/lm.stan", chains = 4, iter = 2000,
+fit <- stan("stan/lm.stan", chains = 4, iter = 2000,
   data = list(x = dat$x, y = dat$y, N = length(dat$y)))
 ```
 
+Congratulations --- you fit your first handwritten Stan model! We can do everything with the posterior samples that we could do with the samples from an rstanarm model or a brms model.
+
+Some of the built-in helper functions and those packages won't work with our model though.
+
 ```{r}
 fit
+```
+
+```{r}
+pars <- c("alpha", "beta", "sigma")
+print(fit, pars = pars)
 ```
 
 ```{r, eval=FALSE}
@@ -80,17 +85,15 @@ shinystan::launch_shinystan(fit)
 ```
 
 ```{r}
-plot(fit)
+plot(fit, pars = pars)
 ```
-
 
 Experiment with inspecting the posterior chains using the bayesplot package.
 
 ```{r}
 fit_array <- as.array(fit)
-pars <- c("alpha", "beta", "sigma")
-bayesplot::mcmc_trace(fit_array, pars = pars)
-bayesplot::mcmc_dens_overlay(fit_array, pars = pars)
+bayesplot::mcmc_trace(fit_array, pars = pars) 
+# exercise
 ```
 
 Experiment with inspecting the posterior predictive distribution using the bayesplot package:
@@ -99,10 +102,6 @@ Experiment with inspecting the posterior predictive distribution using the bayes
 pp <- extract(fit)$posterior_predictions
 bayesplot::ppc_dens_overlay(y = dat$y, yrep = pp[1:25, ])
 ```
-
-Congratulations --- you fit your first handwritten Stan model! We can do everything with the posterior samples that we could do with the samples from an rstanarm model or a brms model.
-
-Some of the built-in helper functions and those packages won't work with our model though.
 
 Let's say we want to extract linear model predictions from the posterior. We can do that with the existing samples in R or we could program that into the `generated quantities` section of our Stan model.
 
@@ -119,7 +118,7 @@ names(post)
 dim(post$beta)
 ```
 
-There are a variety of more slick ways to do this, but I'm going to do it in the most simple explicit ways so you can see what's happening.
+There are a variety of more slick ways to do this, but I'm going to do it in the most simple explicit way possible so you can see what's happening.
 
 <https://github.com/mjskay/tidybayes>
 
@@ -141,17 +140,26 @@ n_sim <- 8
 out <- vector(mode = "list", length = 8)
 for (i in seq_along(out)) {
   out[[i]] <- tibble(x = x)
-  out[[i]]$y <- 
-    rnorm(length(x), 
+  out[[i]]$i <- i
+  out[[i]]$y_pp <- 
+    rnorm(
+      n = length(x), 
       mean = post$alpha[i] + post$beta[i] * x, 
       sd = post$sigma[i])
-  out[[i]]$i <- i
 }
-out <- bind_rows(out)
-out$type <- "sampled"
-out <- bind_rows(out, tibble(x = x, y = y, type = "observed", i = 9))
+out <- dplyr::bind_rows(out) # turn the list into a data.frame
+out$type <- "posterior prediction"
 
-ggplot(out, aes(x, y, colour = type)) + geom_point() + 
+# add the real data as the last panel:
+out <- dplyr::bind_rows(out, 
+  tibble(x = x, y_pp = y, type = "observed", i = 9))
+
+ggplot(out, aes(x, y_pp, colour = type)) + geom_point() + 
   facet_wrap(~i)
 ```
 
+```{r}
+log_lik <- loo::extract_log_lik(fit, merge_chains = FALSE)
+rel_n_eff <- loo::relative_eff(exp(log_lik))
+loo::loo(log_lik, r_eff = rel_n_eff)
+```
