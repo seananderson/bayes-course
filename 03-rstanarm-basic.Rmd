@@ -17,6 +17,12 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Objectives
+
+- Learn to fit pre-packaged Bayesian regression models with rstanarm.
+- Become familiar with the concepts of posterior predictive checking and 
+  manipulating posterior samples to calculate posterior probabilities.
+  
 # Setup
 
 Let's load dplyr, ggplot2, and rstanarm. 
@@ -28,7 +34,7 @@ library(rstanarm)
 theme_set(theme_light())
 ```
 
-Any time we are using rstan (or a package that relies on rstan, such as rstanarm), we can set an R option to use parallel processing with all available cores. This example should run so quickly that it will likely run faster on a single core, so you may choose to skip this or explicitly set it to 1 core.
+Any time we use rstan (or a package that relies on rstan, such as rstanarm), we can set an R option to use parallel processing with all available cores: `options(mc.cores = parallel::detectCores())`. This example should run so quickly that it will likely run faster on a single core, so you may choose to skip this or explicitly set it to 1 core.
 
 ```{r, eval=FALSE}
 # options(mc.cores = parallel::detectCores())
@@ -44,7 +50,7 @@ Hughes, B.B., Lummis, S.C., Anderson, S.C., and Kroeker, K.J. 2018. Unexpected r
 Basic description of the data here. TODO
 
 ```{r}
-d <- readRDS("data-raw/hughes-etal-2018.rds") %>%
+d <- readRDS("data/hughes-etal-2018.rds") %>%
   filter(label == "Change in seahare mass (g FW)") %>% 
   rename(change_seahare_mass_g_fw = value) %>% 
   select(-label, -figure_panel, -nutrients_text, -response)
@@ -57,16 +63,18 @@ ggplot(d,
   geom_point()
 ```
 
-Let's rescale the predictors. This is important
+Let's rescale (center and possibly divide by 2 SDs) the predictors. This is important
 
 1. so that we have some idea of what reasonable prior values will be,
-2. our coefficients are on a reasonable scale for interpretation and for Stan, and
-3. so that we can add a quadratic effect and have one coefficient represent the slope and the other the curvature.
+2. so that our coefficients are on a reasonable scale for interpretation and 
+   for Stan, and
+3. so that we can add a quadratic effect and have one coefficient represent the
+   slope and the other the curvature.
 
 ```{r}
 d <- mutate(d,
   ph_scaled = arm::rescale(ph),
-  nutrients_centered = arm::rescale(nutrients)
+  nutrients_centered = nutrients - mean(nutrients)
 )
 ```
 
@@ -95,6 +103,8 @@ fit <- stan_glm(
 )
 ```
 
+Note that we set `autoscale = FALSE`. See `?rstanarm::priors`.
+
 There are a variety of functions available to inspect our model including the usual summary function:
 
 ```{r}
@@ -113,15 +123,13 @@ We are going to use the plotting functions from the package bayesplot, which is 
 
 There are many available plotting functions in the bayesplot package. Before we start exploring them, we need to make sure that our chains are consistent with convergence. To start with we already checked the effective sample size and Rhat values, but there's no substitute for visually inspecting the chains!
 
-The primary way of looking at MCMC chains is as overlaid timeseries:
+The primary way of looking at MCMC chains is as overlaid time series:
 
 ```{r}
 plot(fit, plotfun = "trace")
 ```
 
 How does that look to you? 
-
-Realistically this is just about as perfect as it gets.
 
 Another thing to check is the autocorrelation in the chains:
 
@@ -191,7 +199,7 @@ means:
 bayesplot::mcmc_trace(as.array(fit))
 ```
 
-Note the use of `as.array()` to convert the output from rstanarm first. `as.array()` maintains the separate chains for the plotting functions.
+Note the use of `rstanarm::as.array.stanreg()` to convert the output from rstanarm first. `as.array()` maintains the separate chains for the plotting functions.
 
 These are the available plotting functions:
 
@@ -201,7 +209,7 @@ bayesplot::available_mcmc()
 
 ### Your turn
 
-Experiment with the available plotting functions to summarize the posterior probabilities of the parameters in our model. Which do you find most useful? 
+Experiment with the available plotting functions to summarize the posterior probabilities of the parameters in our model. Which do you find most useful here? 
 
 ```{r}
 plot(fit, plotfun = "areas") # exercise
@@ -210,15 +218,11 @@ plot(fit, plotfun = "combo") # exercise
 plot(fit, plotfun = "areas_ridges") # exercise
 ```
 
-What does the `(Intercept)` coefficient represent?
-
-What does the `nutrients_centered` coefficient represent? 
-
-What does the `ph_scaled` coefficient represent? 
-
-What does the `I(ph_scaled^2)` coefficient represent?
-
-What does the `sigma` coefficient represent? 
+- What does the `(Intercept)` coefficient represent?
+- What does the `nutrients_centered` coefficient represent?
+- What does the `ph_scaled` coefficient represent? 
+- What does the `I(ph_scaled^2)` coefficient represent?
+- What does the `sigma` coefficient represent?
 
 Think back to our introduction to Bayesian statistics. How do we interpret these summaries of the coefficients probabilistically?
 
@@ -226,11 +230,12 @@ Note that we can easily extract the credible intervals with:
 
 ```{r}
 posterior_interval(fit)
-posterior_interval(fit, prob = 0.9)
+posterior_interval(fit, prob = 0.9) # default
+posterior_interval(fit, prob = 0.89) # see 'Statistical Rethinking'
 posterior_interval(fit, prob = 0.5)
 ```
 
-Why might we prefer 90% or 50% or even 87% credible intervals over the usual 95%? Note that rstanarm and bayesplot default to 90% credible intervals.
+Why might we prefer 90% or 50% or even 89% credible intervals over the usual 95%? Note that rstanarm and bayesplot default to 90% credible intervals.
 
 # Checking the priors
 
@@ -240,11 +245,50 @@ We are going to talk about priors more extensively soon. For now, let's use the 
 posterior_vs_prior(fit)
 ```
 
-It's helpful to know that you can extract the priors from an rstanarm model with the `prior_summary()` function. In this case we specified all the priors explicitly, which is a good practice. This function is a good way to check that the priors were interpreted correctly, and is also a good way to discover parameters that you might have forgot to set the priors on.
+It's helpful to know that you can extract details on the priors from an rstanarm model with the `prior_summary()` function. In this case we specified all the priors explicitly, *which is a good practice*. This function is a good way to check that the priors were interpreted correctly, and is also a good way to discover parameters that you might have forgot to set the priors on.
 
 ```{r}
 prior_summary(fit)
 ```
+
+Let's compare the full posterior distribution for a parameter to its prior as an example.
+
+For models fit with rstanarm, we can extract the posterior samples with `as.data.frame()` or `as.matrix()`. Let's use the data frame version. We'll also convert to a tibble, just so that it prints nicely.
+
+```{r}
+post <- as_tibble(as.data.frame(fit))
+post
+```
+
+What does each column in this data frame represent?
+
+Our prior on ph_scaled^2:
+
+```{r}
+prior <- tibble(
+  `I(ph_scaled^2)` = seq(-10, 10, length.out = 300),
+  density = dnorm(`I(ph_scaled^2)`, 0, 3)
+)
+prior
+```
+
+Plot them both:
+
+```{r}
+# note `..density..` to get probability densities not counts
+# see `?geom_histogram()`
+ggplot() +
+  geom_histogram(data = post, aes(`I(ph_scaled^2)`, ..density..), 
+    bins = 80) +
+  geom_ribbon(data = prior, aes(x = `I(ph_scaled^2)`, 
+    ymax = density, ymin = 0), fill = "grey50", alpha = 0.3) +
+  coord_cartesian(xlim = c(-5, 2.5)) +
+  coord_cartesian(expand = FALSE) # no gap below 0
+```
+
+One thing we haven't done is test the sensitivity of our posterior samples to the choice of priors. How could we go about testing that?
+
+How could we make our model more "conservative"? We will come back to this later with a demonstration.                             
 
 # Shiny Stan
 
@@ -264,7 +308,7 @@ newdata <- expand.grid(
 head(newdata)
 ```
 
-We can extract samples from the linear predictor with the `posterior_linpred()` function. These are samples from the posterior without observation error added on. In other words, these are similar in concept to the confidence interval you would get out of `predict.glm()` or `predict.lm()`.
+We can extract samples from the linear predictor with the `posterior_linpred()` function. These are samples from the posterior without observation error. In other words, these are similar in concept to the confidence interval you would get out of `predict.glm()` or `predict.lm()`.
 
 ```{r}
 posterior_linear <- posterior_linpred(fit, newdata = newdata)
@@ -299,18 +343,16 @@ ggplot(newdata, aes(ph_scaled, exp(est),
 
 Note that I exponentiated the predictions to make our plot on the original natural scale.
 
-# Summarizing the posterior samples ourselves
+# Summarizing the posterior distribution multiple ways
 
-One of the beauties of Bayesian statistical models is that we can quantify the probability of nearly any comparison you can imagine. And all you have to do is add, subtract, multiply, or divide the samples. Let's try some examples.
+One of the beauties of Bayesian statistical models is that we can quantify the probability of nearly any comparison we can imagine. All you have to do is add, subtract, multiply, or divide the samples. Let's try some examples.
 
-For models fit with rstanarm, we can extract the posterior samples with `as.data.frame()` or `as.matrix()`. Let's use the data frame version. We'll also converted to a tibble, just so that it prints nicely.
+As a reminder, `post` comes from:
 
 ```{r}
-post <- as.data.frame(fit) %>% as_tibble()
+post <- as_tibble(as.data.frame(fit))
 post
 ```
-
-What does each column in this data frame represent?
 
 What if we wanted to know the probability that there is a negative (frowning) quadratic shape or a positive (smiling) quadratic shape to the relationship? We can get that from the ph^2 term.
 
@@ -326,11 +368,65 @@ We're taking advantage of the fact that R treats `TRUE` and `FALSE` as 1 and 0. 
 sum(ph2_samples < 0) / length(ph2_samples)
 ```
 
-What is the probability that the change in seahare mass is greater in the case where nutrients weren't added? 
+What is the probability that the change in seahare mass is greater in the case where nutrients were not added? 
 
 ```{r}
 mean(post$nutrients_centered < 0)
 ```
+
+A major benefit to MCMC sampling of Bayesian models is how easy it is to quantify any comparison you want to make. 
+
+For example, how much greater would you expect the change in seahare mass to be under conditions of the lowest pH tested with nutrients compared to the average pH condition without nutrients?
+
+I.e. compare the blue posterior in the lower left to the pink posterior in the middle of the last plot. Let's compare the expectations not the ratio of new observations including their observation error (i.e. the linear predictions not the full "posterior predictions").
+
+```{r}
+min_ph <- min(d$ph_scaled)
+mean_ph <- mean(d$ph_scaled)
+
+condition1 <- data.frame(
+  ph_scaled = min_ph,
+  nutrients_centered = c(0.5))
+pp1 <- posterior_linpred(fit, newdata = condition1)[,1]
+
+condition2 <- data.frame(
+  ph_scaled = mean_ph,
+  nutrients_centered = c(-0.5))
+pp2 <- posterior_linpred(fit, newdata = condition2)[,1]
+
+ratio <- exp(pp2) / exp(pp1)
+ggplot(tibble(ratio = ratio), aes(ratio)) + 
+  geom_histogram() +
+  scale_x_log10() +
+  geom_vline(xintercept = 1)
+
+quantile(ratio, probs = c(0.11, 0.5, 0.89))
+mean(ratio > 1)
+```
+
+That is doing the same thing as the following code. Maybe one or the other is clearer to you.
+
+```{r}
+pp1 <- min_ph * post$ph_scaled +
+  min_ph^2 * post$`I(ph_scaled^2)` + 
+  0.5 * post$nutrients_centered
+
+pp2 <- mean_ph * post$ph_scaled + 
+  mean_ph^2 * post$`I(ph_scaled^2)` + 
+  -0.5 * post$nutrients_centered
+
+ratio <- exp(pp2) / exp(pp1)
+
+ggplot(tibble(ratio = ratio), aes(ratio)) + 
+  geom_histogram() +
+  scale_x_log10() +
+  geom_vline(xintercept = 1)
+
+quantile(ratio, probs = c(0.11, 0.5, 0.89))
+mean(ratio > 1)
+```
+
+*If you can think it you can quantify it*! And all you have to do is manipulate the MCMC samples. Add, subtract, multiply, or divide as needed.
 
 # Model comparison
 
@@ -345,7 +441,7 @@ fit2 <- update(fit, formula. = . ~ . +
   nutrients_centered:ph_scaled + nutrients_centered:I(ph_scaled^2))
 ```
 
-First we should make sure that the model we just fit isn't giving us gibberish.
+First we should make sure that the chains look like they've converged.
 
 ```{r}
 summary(fit2)
@@ -367,4 +463,31 @@ We could compare those values ourselves, but we can also use the `loo::compare_m
 compare_models(loo1, loo2)
 ```
 
-So this suggests that we should favor the original model that did not have interactions between nutrients and pH.
+So this suggests that we should favour the original model that did not have interactions between nutrients and pH.
+
+# Bonus: The same model fit with the brms package
+
+Both rstanarm and brms for sampling from Stan models without coding the entire model as yourself. Both have some functionality that the other doesn't, although in general brms is even more flexible in the types of models that can fit. The main downside to brms is that it dynamically writes a Stan model and then compiles it before sampling. It also doesn't have auto caching of the compilation step, so you'll have to wait for your model to compile each time you want to sample from it.
+
+```{r, eval=FALSE, message=FALSE}
+fit_brms <- brms::brm(
+  log(change_seahare_mass_g_fw) ~ ph_scaled + I(ph_scaled^2) + nutrients_centered,
+  data = d, iter = 2000, chains = 4,
+  prior = c(
+      brms::set_prior("normal(0, 3)", class = "b"),
+      brms::set_prior("normal(0, 10)", class = "Intercept"),
+      brms::set_prior("student_t(3, 0, 3)", class = "sigma")
+    )
+)
+fit_brms
+plot(fit_brms)
+brms::prior_summary(fit_brms)
+brms::pp_check(fit_brms)
+brms::marginal_effects(fit_brms)
+brms::posterior_linpred(fit_brms)
+brms::posterior_predict(fit_brms)
+brms::posterior_samples(fit_brms)
+brms::stancode(fit_brms)
+brms::standata(fit_brms)
+brms::LOO(fit_brms)
+```

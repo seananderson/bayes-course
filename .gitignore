@@ -39,3 +39,8 @@ vignettes/*.pdf
 *.png
 *.html
 .Rproj.user
+
+original-files/
+*.key
+admin/
+extra/
