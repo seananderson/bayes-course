@@ -7,6 +7,12 @@ output:
     toc_float: true
 ---
 
+# Goals 
+
+- Learn the basics of Stan model syntax and how to interact with Stan in R
+
+# Setup 
+
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -15,27 +21,37 @@ knitr::opts_chunk$set(
   fig.asp = 0.618,
   fig.align = "center"
 )
-show_file = function(file) {
+show_file <- function(file) {
   cat(paste(readLines(file), collapse = "\n"))
 }
 ```
 
 ```{r, warning=FALSE, message=FALSE}
-library(tidyverse)
+library(ggplot2)
+library(dplyr)
 theme_set(theme_light())
 ```
+
+Let's load the rstan R package, which lets us interact with R.
 
 ```{r}
 library(rstan)
 ```
 
+If we wanted, we could set our option to use parallel processing. This would be useful with more complicated models or more data. For this simple exercise, it will probably be fastest with a single core. 
+
+```{r}
+# options(mc.cores = parallel::detectCores())
+options(mc.cores = 1)
+```
+
+Another important option we can set with rstan is whether we want the compiled model to be saved so that we don't have to recompile it every time we run it. You probably want to set this because the compilation can take a while. 
+
 ```{r}
 rstan_options(auto_write = TRUE)
 ```
 
-```{r}
-# options(mc.cores = parallel::detectCores())
-```
+# Simulating data
 
 Let's simulate some data to fit a very simple Stan model to. We will focus on a linear model with normally distributed errors.
 
@@ -54,15 +70,29 @@ dat <- tibble(x = x, y = y)
 ggplot(dat, aes(x, y)) + geom_point()
 ```
 
+# The Stan model 
+
+Take a look at the following Stan model that I have set up. 
+
+We'll talk about the various sections as a group. 
+
+```{r}
+show_file("stan/lm-simple.stan")
+```
+
+This next version also has a generated quantity section. This is the one we will actually run. The generated quantities make it easier to do some things after like make posterior predictions. 
+
 ```{r}
 show_file("stan/lm.stan")
 ```
+
+# Fitting the model
 
 The first time we run the next code chunk, Stan will translate our model into C++ and compile it. This will take little while. After that, assuming we set `rstan_options(auto_write = TRUE)`, Stan will avoid recompiling the model and less something in the model code changes.
 
 Let's sample from the model now:
 
-```{r}
+```{r, message=FALSE, results='hide'}
 fit <- stan("stan/lm.stan", chains = 4, iter = 2000,
   data = list(x = dat$x, y = dat$y, N = length(dat$y)))
 ```
@@ -71,29 +101,44 @@ Congratulations --- you fit your first handwritten Stan model! We can do everyth
 
 Some of the built-in helper functions and those packages won't work with our model though.
 
-```{r}
+```{r, eval=FALSE}
 fit
 ```
+
+Notice all of the extra lines of reported results for our generated quantities? We can focus just on the parameters we want with:
 
 ```{r}
 pars <- c("alpha", "beta", "sigma")
 print(fit, pars = pars)
 ```
 
+We can use shinystan if we want to look at the model. 
+
 ```{r, eval=FALSE}
 shinystan::launch_shinystan(fit)
 ```
 
+The default plot method shows point estimates and credible intervals.
+
 ```{r}
 plot(fit, pars = pars)
 ```
+
+There are other options. 
+
+```{r, eval=FALSE}
+?rstan::`rstan-plotting-functions`
+stan_dens(fit, pars = pars)
+```
+
+Alternatively, and probably preferably, we can use the bayesplot package. 
 
 Experiment with inspecting the posterior chains using the bayesplot package.
 
 ```{r}
 fit_array <- as.array(fit)
 bayesplot::mcmc_trace(fit_array, pars = pars) 
-# exercise
+bayesplot::mcmc_dens_overlay(fit_array, pars = pars) # exercise
 ```
 
 Experiment with inspecting the posterior predictive distribution using the bayesplot package:
@@ -103,12 +148,10 @@ pp <- extract(fit)$posterior_predictions
 bayesplot::ppc_dens_overlay(y = dat$y, yrep = pp[1:25, ])
 ```
 
-Let's say we want to extract linear model predictions from the posterior. We can do that with the existing samples in R or we could program that into the `generated quantities` section of our Stan model.
-
-Let's start by doing it in R:
+# Manipulating the posterior samples ourselves
 
 ```{r}
-post <- extract(fit)
+post <- rstan::extract(fit)
 ```
 
 The output from `rstan::extract()` is a named list. Each element of the list is a numeric vector of samples if that parameter had one dimension (as all of our parameters did this time), or a matrix of samples if, say, beta had represented multiple slope parameters. 
@@ -118,9 +161,7 @@ names(post)
 dim(post$beta)
 ```
 
-There are a variety of more slick ways to do this, but I'm going to do it in the most simple explicit way possible so you can see what's happening.
-
-<https://github.com/mjskay/tidybayes>
+Let's overlay some model fits from the posterior on the data:
 
 ```{r}
 N <- 100
@@ -133,7 +174,11 @@ ggplot(dat, aes(x, y)) + geom_point() +
 
 Is that starting to look like the confidence/credible intervals are used to looking at?
 
-How would we derive posterior predictions? In other words, how would we add on the observation component to our predictions? Let's manually create 8 draws from the posterior predictive distribution and compare them to our data. 
+What if we wanted to look at posterior predictions? We can do that with the `posterior_predictions` samples that we created from the `generated quantities` section of our Stan model. We did that above. Let's do it in R to see how we could create them after.
+
+In other words, how would we add on the observation component to our predictions? Let's manually create 8 draws from the posterior predictive distribution and compare them to our data. 
+
+There are many ways you could do this. The following is one way. We will create a list with posterior predictions within data frames and then bind the elements of the list into a big data frame. We are doing this so it is easy to plot the output in ggplot.
 
 ```{r}
 n_sim <- 8
@@ -158,8 +203,14 @@ ggplot(out, aes(x, y_pp, colour = type)) + geom_point() +
   facet_wrap(~i)
 ```
 
+# Model comparison 
+
+All we need to do to get at the leave-one-out information criterion is to include the `log_lik` variable in the generated quantities section. Then we can calculate LOO with:
+
 ```{r}
 log_lik <- loo::extract_log_lik(fit, merge_chains = FALSE)
 rel_n_eff <- loo::relative_eff(exp(log_lik))
 loo::loo(log_lik, r_eff = rel_n_eff)
 ```
+
+Of course, LOO isn't very useful unless we have another model to compare this one with. 

@@ -20,12 +20,14 @@ show_file = function(file) {
 }
 ```
 
-# Goals:
+# Goals
 
-- Gain exposure to programming a (timeseries) model in Stan that isn't a simple linear regression.
+- Gain exposure to programming a (timeseries) model in Stan that isn't a simple
+  linear regression.
 - Practice interacting with Stan.
 - Practice drawing inference from the posterior samples on a parameter.
-- Practice comparing a parameter posterior to its prior distribution to assess the information in the data.
+- Practice comparing a parameter posterior to its prior distribution to assess
+  the information in the data.
 
 # Package loading and option setting
 
