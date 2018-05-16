@@ -11,3 +11,9 @@ The course draws partly on material from:
 Hobbs, N.T., and Hooten, M.B. 2015. Bayesian models: a statistical primer for ecologists. Princeton University Press, Princeton, New Jersey.
 
 McElreath, R. 2016. Statistical rethinking: a Bayesian course with examples in R and Stan. CRC Press/Taylor & Francis Group, Boca Raton.
+
+To start:
+
+```r
+usethis::use_course("https://github.com/seananderson/bayes-course/archive/master.zip")
+```
