@@ -13,21 +13,20 @@ output: html_document
 
 4. Learn how to assess the relative contribution of priors vs. the data. Learn the difference between weakly informative and informative priors. Learn what some common choices of weakly informative priors are.
 
-5. Learn the basics of Stan model syntax and how to interact with Stan in R. Experience one 'non-standard' model: a population-growth time series model.
+5. Learn the basics of Stan model syntax and how to interact with Stan in R. If there is time experience one 'non-standard' model: a population-growth time series model.
 
 6. Leave with some ideas for how to describe Bayesian models in publications and where to find more information.
 
 # Plan 
 
-1. Introduction to probability, Bayes' theorem, when to go Bayesian (slides)
-  - basics of conditional probability
-  - Bayes theorem with a medical test example
+1. Introduction to probability, Bayes' theorem, when to go Bayesian (slides and group exercises)
+  - an introduction to Bayes' theorom and Bayesian updating
   - frequentist vs. Bayesian inference interpretation
   - went to go Bayes: advantages and disadvantages
 
 2. Demystifying MCMC (group exercises and online demo)
   - run through Metropolis MCMC in R and plot the chain on a whiteboard
-  - experiment with tuning the MCMC
+  - experiment with tuning MCMC
   - play with online demo of Hamiltonian and NUTS MCMC
 
 3. Introduction to applied Bayesian modeling (group walk-through of code)
@@ -39,7 +38,7 @@ output: html_document
   - experiment with making probabilistic statements by manipulating the 
     posterior samples
 
-4. Priors, priors, and more priors (interactive code and discussion)
+4. Priors, priors, and more priors (interactive code, slides, and discussion)
   - experiment with an interactive simulation
   - talk about weakly informative priors, informative priors, and the 
     fallacy of uninformative priors
@@ -50,11 +49,11 @@ output: html_document
   - look at the syntax and the code sections of a Stan model
   - call the Stan model from R
   - extract the posterior samples and make similar plots as before
-  - fit a population-growth time series model in Stan
+  - fit a population-growth time series model in Stan if there is time
 
 6. Applied Bayesian modeling standards, words of wisdom, and resources (slides)
   - standards for iterations, warmup, chains, and assessing convergence
-  - what to report in a paper
-  - how to describe the models
   - Stan warnings to watch out for
+  - how to describe the models
+  - what to report in a paper
   - good books and online resources
