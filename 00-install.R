@@ -1,25 +1,75 @@
-# Because of our limited time, it is critical that you arrive with all of the
-# necessary software and R packages installed. If you are having any issues with
-# this, please get in touch with me (sean@seananderson.ca) before the workshop.
-# The following R code should walk you through it.
-#
-# I would suggest having the latest version of R, version 3.5.0.
-# However, version 3.4 or above is probably fine.
-# Check with:
-sessionInfo()
+# The first half is adapted from Hadley Wickham's install script.
 
-# You can get the latest version at:
-# https://cran.r-project.org/
-#
-# You will need to have the latest version of RStudio (1.1.447 or greater).
-# You can check with RStudio -> About RStudio on a Mac or Help -> About RStudio on Windows.
-# You can get the latest version at:
-# https://www.rstudio.com/products/rstudio/download/
-# If you know some other text editor really well (e.g. Vim, Emacs, or Sublime
-# Text) and would rather use that, that's fine too.
-#
-# Install the following packages:
-install.packages(c("tidyverse", "rstan", "rstanarm", "brms", "rmarkdown",
-  "manipulate", "shiny", "remotes", "usethis"),
-  dependencies = TRUE)
-remotes::install_github("seananderson/ggsidekick")
+# A polite helper for installing packages ---------------------------------
+
+please_install <- function(pkgs, install_fun = install.packages) {
+  if (length(pkgs) == 0) {
+    return(invisible())
+  }
+  if (!interactive()) {
+    stop("Please run in interactive session", call. = FALSE)
+  }
+
+  title <- paste0(
+    "Ok to install these packges?\n",
+    paste("* ", pkgs, collapse = "\n")
+  )
+  ok <- menu(c("Yes", "No"), title = title) == 1
+
+  if (!ok) {
+    return(invisible())
+  }
+
+  install_fun(pkgs)
+}
+
+# Do you have all the needed packages? ------------------------------------
+
+pkgs <- c(
+  "tidyverse", "rstan", "rstanarm", "brms", "rmarkdown",
+  "manipulate", "shiny", "usethis", "bayesplot", "loo",
+  "pkgbuild"
+)
+have <- rownames(installed.packages())
+needed <- setdiff(pkgs, have)
+
+please_install(needed)
+
+# Do you have the latest RStudio? ---------------------------------------
+
+if (rstudioapi::getVersion() < "1.1.447") {
+  cat("Please install the latest version of RStudio from https://www.rstudio.com/products/rstudio/download/\n")
+}
+
+# Do you have the latest R? ---------------------------------------
+
+d <- sessionInfo()
+r_version <- paste0(d$R.version$major, ".", gsub("\\.", "", d$R.version$minor))
+if (r_version < "3.4") {
+  cat("Please install the latest version of R from https://cran.r-project.org/\n")
+}
+
+# Do you have build tools? ---------------------------------------
+
+pkgbuild::check_build_tools(debug = FALSE)
+
+# Stan working? ---------------------------------------
+
+library("rstan")
+scode <- "
+parameters {
+  real y[2];
+}
+model {
+  y[1] ~ normal(0, 1);
+  y[2] ~ double_exponential(0, 2);
+}
+"
+cat("Please wait a minute while the model compiles.\n")
+fit1 <- stan(model_code = scode, iter = 50, verbose = FALSE, chains = 1)
+
+if (identical(class(fit1)[[1]], "stanfit")) {
+  cat("Stan is working. Congratulations! You're done. You can ignore any warnings about 'Bayesian Fraction of Missing Information'.\n")
+} else {
+  cat("Stan is *not* working. Please contact Sean at <sean@seananderson.ca> or in person.\n")
+}
