@@ -19,7 +19,7 @@ mcmc_example <- function(
   prior_slope_sd = 3,
   prior_intercept_sd = 10,
   prior_aux_sd = 3,
-  reps = 800 # the length of each MCMC chain
+  reps = 400 # the length of each MCMC chain
 ) {
 
   set.seed(seed)
@@ -36,7 +36,7 @@ mcmc_example <- function(
 
   e <- as.data.frame(m)
 
-  xx <- seq(-30, 30, length.out = 500)
+  xx <- seq(-6, 6, length.out = 200)
 
   slope_prior <- data.frame(x = xx,
     y = dnorm(xx, mean = prior_slope_mean, sd = prior_slope_sd))
@@ -44,31 +44,34 @@ mcmc_example <- function(
   intercept_prior <- data.frame(x = xx,
     y = dnorm(xx, mean = 0, sd = prior_intercept_sd))
 
-  xx0 <- seq(0, 30, length.out = 500)
+  xx0 <- seq(0, 6, length.out = 200)
   sigma_prior <-  data.frame(x = xx0,
     y = extraDistr::dhnorm(xx0, sigma = prior_aux_sd))
 
   .range <- c(-4, 4)
 
-  g1 <- ggplot(e, aes(`(Intercept)`, ..density..)) + geom_histogram(binwidth = 0.2) +
+  g1 <- ggplot(e, aes(`(Intercept)`, ..density..)) + geom_histogram(bins = 50) +
     geom_line(data = intercept_prior, aes(x, y), col = "blue") +
     coord_cartesian(xlim = .range) +
+    xlab("Intercept") +
     geom_vline(xintercept = intercept, col = "red")
 
-  g2 <- ggplot(e, aes(x, ..density..)) + geom_histogram(binwidth = 0.2) +
+  g2 <- ggplot(e, aes(x, ..density..)) + geom_histogram(bins = 50) +
     geom_line(data = slope_prior, aes(x, y), col = "blue") +
     coord_cartesian(xlim = .range) +
+    xlab("Slope coefficient") +
     geom_vline(xintercept = slope, col = "red")
 
-  g3 <- ggplot(e, aes(sigma, ..density..)) + geom_histogram(binwidth = 0.2) +
+  g3 <- ggplot(e, aes(sigma, ..density..)) + geom_histogram(bins = 50) +
     geom_line(data = sigma_prior, aes(x, y), col = "blue") +
     coord_cartesian(xlim = c(0, max(.range))) +
+    xlab("Observation error SD") +
     geom_vline(xintercept = sigma, col = "red")
 
-  nd <- data.frame(x = seq(-2, 2, length.out = 4))
-  pp <- posterior_linpred(m, newdata = nd, draws = 100)
+  nd <- data.frame(x = seq(-1, 1, length.out = 2))
+  pp <- posterior_linpred(m, newdata = nd, draws = 50)
   pp2 <- reshape2::melt(pp)
-  pp2$x <- rep(nd$x, each = 100)
+  pp2$x <- rep(nd$x, each = 50)
 
   g4 <- ggplot(d, aes(x = x, y = y)) +
     geom_point() +
@@ -90,7 +93,7 @@ library(manipulate)
 manipulate(
   mcmc_example(
     seed = seed,
-    intercept = intercept,
+    intercept = 2.4,
     slope = slope,
     sigma = sigma,
     .n = .n,
@@ -99,7 +102,7 @@ manipulate(
     prior_intercept_sd = prior_intercept_sd,
     prior_aux_sd = prior_aux_sd),
   seed = slider(1, 1000, 42, step = 1),
-  intercept = slider(-5, 5, 0, step = 0.2),
+  # intercept = slider(-5, 5, 0, step = 0.2),
   slope = slider(-1.6, 1.6, 0.8, step = 0.2),
   sigma = slider(0.1, 8, 1, step = 0.1),
   .n = slider(2, 200, 30),

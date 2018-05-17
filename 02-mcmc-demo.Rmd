@@ -58,7 +58,8 @@ Run this next code chunk repeatedly:
 # ----------------------------------------------------------------
 
 # Calculate the ratio of the proposal and previous probabilities:
-(prob_ratio <- exp(log_posterior_proposal) / exp(log_posterior_previous))
+# (prob_ratio <- exp(log_posterior_proposal) / exp(log_posterior_previous))
+(prob_ratio <- exp(log_posterior_proposal - log_posterior_previous))
 # ----------------------------------------------------------------
 
 # If the probability ratio is > 1, then always accept the new parameter values.
@@ -83,7 +84,7 @@ mcmc_example <- function(
   sigma = 5, # the true residual SD; we will assume we know this for simplicity
   .n = 30, # number of data points to simulate
   prior_mu = 0, # our prior distribution mean
-  prior_mu_sd = 50, # our prior distribution SD on the mean
+  prior_mu_sd = 10, # our prior distribution SD on the mean
   # Next, the SD of our jump function.
   # Too small a value and the chain might take a
   # very long time to get to the right parameter space or might get stuck in the
@@ -165,6 +166,11 @@ mcmc_example <- function(
   invisible(out)
 }
 ```
+
+```{r}
+mcmc_example()
+```
+
 
 ```{r, eval=FALSE}
 library(manipulate)
