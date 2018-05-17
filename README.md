@@ -6,7 +6,7 @@ Material for a workshop. The exercises are a work in progress and the slides wil
 
 If you are taking this workshop, start by running the file `00-install.R` in R to install the necessary packages and make sure your computer is set up properly.
 
-The course draws partly on material from:
+The course draws partly on teaching ideas from:
 
 Hobbs, N.T., and Hooten, M.B. 2015. Bayesian models: a statistical primer for ecologists. Princeton University Press, Princeton, New Jersey.
 
@@ -15,5 +15,6 @@ McElreath, R. 2016. Statistical rethinking: a Bayesian course with examples in R
 To start:
 
 ```r
-usethis::use_course("https://github.com/seananderson/bayes-course/archive/master.zip")
+# install.packages("usethis")
+usethis::use_course("http://bit.ly/bayes-course")
 ```

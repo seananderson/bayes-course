@@ -49,6 +49,8 @@ Hughes, B.B., Lummis, S.C., Anderson, S.C., and Kroeker, K.J. 2018. Unexpected r
 
 Basic description of the data here. TODO
 
+Change in seahare, a sea slug, (Phyllaplysia taylori) biomass after... marine gastropod
+
 ```{r}
 d <- readRDS("data/hughes-etal-2018.rds") %>%
   filter(label == "Change in seahare mass (g FW)") %>% 
