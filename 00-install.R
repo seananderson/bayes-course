@@ -34,7 +34,6 @@ have <- rownames(installed.packages())
 needed <- setdiff(pkgs, have)
 
 please_install(needed)
-remotes::install_github("r-lib/pkgbuild")
 
 # Do you have the latest RStudio? ---------------------------------------
 
@@ -51,8 +50,18 @@ if (r_version < "3.4") {
 }
 
 # Do you have build tools? ---------------------------------------
+devtools::has_devel()
 
-pkgbuild::check_build_tools(debug = FALSE)
+# If not:
+
+# On a Mac:
+# Open the Terminal.app (see /Applications/Utilities/Terminal.app)
+# Run:
+# xcode-select --install
+
+# On a PC:
+# https://thecoatlessprofessor.com/programming/installing-rtools-for-compiled-code-via-rcpp/
+# Makes sure to check the checkbox to modify your "path"!
 
 # Stan working? ---------------------------------------
 
