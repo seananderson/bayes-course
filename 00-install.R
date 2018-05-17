@@ -63,6 +63,11 @@ devtools::has_devel()
 # https://thecoatlessprofessor.com/programming/installing-rtools-for-compiled-code-via-rcpp/
 # Makes sure to check the checkbox to modify your "path"!
 
+# Restart R
+
+# Did it work?
+devtools::has_devel()
+
 # Stan working? ---------------------------------------
 
 library("rstan")
