@@ -28,12 +28,13 @@ please_install <- function(pkgs, install_fun = install.packages) {
 pkgs <- c(
   "tidyverse", "rstan", "rstanarm", "brms", "rmarkdown",
   "manipulate", "shiny", "usethis", "bayesplot", "loo",
-  "pkgbuild"
+  "remotes"
 )
 have <- rownames(installed.packages())
 needed <- setdiff(pkgs, have)
 
 please_install(needed)
+remotes::install_github("r-lib/pkgbuild")
 
 # Do you have the latest RStudio? ---------------------------------------
 
