@@ -16,5 +16,5 @@ To start:
 
 ```r
 # install.packages("usethis")
-usethis::use_course("http://bit.ly/bayes-course")
+usethis::use_course("bit.ly/bayes-course")
 ```
