@@ -32,6 +32,9 @@ A relatively new package that looks very useful for manipulating Stan and other 
 Visualize MCMC algorithms including NUTS:
 <https://chi-feng.github.io/mcmc-demo/>
 
+Statistical Rethinking Fall 2017 lectures:
+<https://youtu.be/oy7Ks3YfbDg>
+
 # Textbooks 
 
 Hobbs, N.T., and Hooten, M.B. 2015. Bayesian models: a statistical primer for ecologists. Princeton University Press, Princeton, New Jersey.

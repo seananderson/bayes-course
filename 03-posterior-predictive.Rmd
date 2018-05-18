@@ -1,0 +1,51 @@
+---
+title: "Posterior predictive checking exercise"
+author: "Sean Anderson"
+output: html_document
+---
+
+# Goals
+
+- Experiment with using posterior predictive checks to discover issues with the probability model
+
+# Setup
+
+I've simulated and fit models to 2 data sets. Each model has some issue and not the probability model does not represent the data well. See if you can figure out what the problem is by using posterior protective checks. 
+
+```{r}
+library(rstanarm)
+```
+
+# Exercise 1
+
+Load the data:
+
+```{r}
+d <- readRDS("data/ppcheck1.rds")
+```
+
+For both of these exercises the data is a simple data frame with one predictor `x` and one response variable `y`.
+
+We will fit simple linear regressions to the data.
+
+```{r}
+fit <- stan_glm(
+  y ~ x,
+  data = d, iter = 2000, chains = 4) # let's not worry about priors for this exercise
+```
+
+Now use `pp_check()` to inspect the model. Can you find what looks wrong? What might be generating the problem? 
+
+# Exercise 2
+
+Again, load the following data and try fitting a simple linear model to it. Use posterior predictive checks to inspect the model. Does something look wrong with this model? Do the data look like a random sample from the posterior? 
+
+```{r}
+d <- readRDS("data/ppcheck2.rds")
+```
+
+```{r}
+fit2 <- stan_glm(
+  y ~ x,
+  data = d, iter = 2000, chains = 4) # let's not worry about priors for this exercise
+```
