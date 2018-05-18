@@ -28,7 +28,7 @@ For both of these exercises the data is a simple data frame with one predictor `
 
 We will fit simple linear regressions to the data.
 
-```{r}
+```{r, results='hide', message=FALSE}
 fit <- stan_glm(
   y ~ x,
   data = d, iter = 2000, chains = 4) # let's not worry about priors for this exercise
@@ -44,7 +44,7 @@ Again, load the following data and try fitting a simple linear model to it. Use 
 d <- readRDS("data/ppcheck2.rds")
 ```
 
-```{r}
+```{r, results='hide', message=FALSE}
 fit2 <- stan_glm(
   y ~ x,
   data = d, iter = 2000, chains = 4) # let's not worry about priors for this exercise
