@@ -1,0 +1,231 @@
+---
+title: "Fitting a counterfactual model with rstanarm"
+output: html_document
+---
+
+```{r}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+# library(brms)
+library(rstanarm)
+theme_set(ggsidekick::theme_sleek())
+```
+
+```{r}
+dory <- "Paracanthurus hepatus"
+cf <- c("Zebrasoma xanthurum",
+  "Chrysiptera parasema",
+  "Chrysiptera hemicyanea",
+  "Acanthurus nigricans",
+  "Acanthurus sohal",
+  "Acanthurus japonicus",
+  "Acanthurus coeruleus",
+  "Acanthurus leucosternon")
+terms <- c(dory, cf)
+```
+
+```{r}
+if (!file.exists("data-generated/google-dat.rds")) {
+  dd <- lapply(terms, function(x) {
+    gtrendsR::gtrends(x, time = "2014-01-01 2017-07-10", gprop = "web", 
+      low_search_volume = TRUE)
+  })
+  d <- purrr::map_df(dd, function(x) {
+    tibble(date = x$interest_over_time$date, 
+      keyword = x$interest_over_time$keyword,
+      hits = x$interest_over_time$hits)
+  })
+  saveRDS(d, file = "data-generated/google-dat.rds")
+} else {
+  d <- readRDS("data-generated/google-dat.rds")
+}
+```
+
+```{r}
+movie_date <- lubridate::ymd("2016-06-17", tz = "EST")
+ggplot(d, aes(date, hits)) +
+  geom_line(col = "grey20", lwd = 0.5) +
+  facet_wrap(~keyword) + xlab("") + 
+  ylab("Google searches as percent of maximum") +
+  coord_cartesian(expand = FALSE) +
+  geom_vline(xintercept = movie_date, col = "grey60", lty = 2)
+```
+
+```{r}
+dat <- d
+dat <- mutate(dat, 
+  hits = ifelse(hits == 100 & keyword == "Paracanthurus hepatus", 60, hits))
+dat <- dat %>% mutate(hits = hits / 100) %>%
+  reshape2::dcast(date ~ keyword, value.var = "hits") %>% 
+  as_tibble()
+names(dat) <- gsub(" $", "", names(dat))
+names(dat) <- gsub(" ", "_", names(dat))
+```
+
+```{r}
+dat <- mutate(dat, before_movie = date < movie_date)
+```
+
+```{r}
+glimpse(dat)
+```
+
+```{r}
+# options(mc.cores = parallel::detectCores())
+before_dat <- filter(dat, before_movie)
+m1 <- stan_betareg(
+  formula = Paracanthurus_hepatus ~ 
+    Chrysiptera_parasema +
+    Chrysiptera_hemicyanea +
+    Acanthurus_nigricans +
+    Acanthurus_sohal +
+    Acanthurus_japonicus +
+    Acanthurus_coeruleus +
+    Acanthurus_leucosternon,
+  data = before_dat,
+  prior = normal(0, 2, autoscale = FALSE),
+  prior_intercept = normal(0, 10, autoscale = FALSE),
+  prior_phi = student_t(3, 0, 25, autoscale = FALSE))
+```
+
+```{r, eval=FALSE}
+?plot.stanreg
+```
+
+```{r}
+summary(m1)
+# plot(m1, pars = "Chrysiptera_parasema")
+pp_check(m1, plotfun = "dens_overlay")
+pp_check(m1, plotfun = "error_hist")
+pp_check(m1, plotfun = "error_scatter")
+pp_check(m1, plotfun = "ribbon")
+pp_check(m1, plotfun = "ribbon", newdata = dat)
+
+pp_check(m1, plotfun = "intervals")
+
+coef_regex <- "^[A-Z]+[a-z_]+|\\(Intercept\\)"
+plot(m1, plotfun = "trace")
+plot(m1, plotfun = "acf")
+plot(m1, plotfun = "areas")
+plot(m1, plotfun = "areas", regex_pars = coef_regex)
+plot(m1, plotfun = "areas_ridges", regex_pars = coef_regex)
+plot(m1, plotfun = "intervals", regex_pars = coef_regex)
+```
+
+```{r}
+pred <- posterior_predict(m1, newdata = dat)
+dim(pred)
+num_draws <- 4
+pred_long <- reshape2::melt(pred[seq_len(num_draws), ], # n draws from the posterior
+  varnames = c("mcmc_sample", "time_step"), value.name = "y") %>% 
+  as_tibble() %>% 
+  mutate(date = rep(dat$date, each = num_draws))
+```
+
+```{r}
+date_start <- lubridate::ymd("2015-04-01", tz = "EST")
+ggplot(dat, aes(date, Paracanthurus_hepatus)) +
+  geom_line(lwd = 0.8, col = "blue") +
+  xlab("") + 
+  ylab("Google searches as fraction of maximum") +
+  coord_cartesian(expand = FALSE) +
+  geom_vline(xintercept = movie_date, col = "grey60", lty = 2) +
+  geom_line(data = pred_long, aes(y = y, group = mcmc_sample), alpha = 0.3) +
+  xlim(date_start, NA)
+```
+
+```{r}
+dat$posterior_median <- apply(pred, 2, median)
+dat$posterior_upr <- apply(pred, 2, quantile, probs = 0.1)
+dat$posterior_lwr <- apply(pred, 2, quantile, probs = 0.8)
+```
+
+```{r}
+ggplot(dat, aes(date, Paracanthurus_hepatus)) +
+  xlab("") + 
+  ylab("Google searches as fraction of maximum") +
+  coord_cartesian(expand = FALSE) +
+  geom_vline(xintercept = movie_date, col = "grey60", lty = 2) +
+  geom_ribbon(aes(ymin = posterior_lwr, ymax = posterior_upr), alpha = 0.2) +
+  geom_line() +
+  xlim(date_start, NA)
+```
+
+```{r}
+pred_diff <- pred
+for (i in seq(1, ncol(pred))) {
+  pred_diff[, i] <- dat$Paracanthurus_hepatus[i] / pred_diff[, i]
+}
+dat$posterior_ratio_median <- apply(pred_diff, 2, median)
+dat$posterior_ratio_upr <- apply(pred_diff, 2, quantile, probs = 0.1)
+dat$posterior_ratio_lwr <- apply(pred_diff, 2, quantile, probs = 0.9)
+```
+
+```{r}
+ggplot(dat, aes(date, posterior_ratio_median)) +
+  xlab("") + 
+  ylab("Google searches as fraction of maximum") +
+  coord_cartesian(expand = FALSE) +
+  geom_vline(xintercept = movie_date, col = "grey60", lty = 2) +
+  geom_hline(yintercept = 1, lty = 2, col = "grey60") +
+  geom_ribbon(aes(ymin = posterior_ratio_upr, ymax = posterior_ratio_lwr), alpha = 0.4) +
+  geom_line() +
+  xlim(date_start, NA) +
+  scale_y_log10(breaks = c(0.2, 0.5, 1, 2, 5))
+```
+
+```{r}
+dat$p <- apply(pred_diff, 2, function(x) mean(x > 1))
+ggplot(dat, aes(date, p)) + geom_line() + xlim(date_start, NA) +
+  geom_vline(xintercept = movie_date, col = "grey60", lty = 2) +
+  coord_cartesian(ylim = c(0, 1), expand = FALSE) +
+  ylab("Probability of a positive effect")
+```
+
+```{r}
+dat$p <- apply(pred_diff, 2, function(x) mean(x > 2))
+ggplot(dat, aes(date, p)) + geom_line() + xlim(date_start, NA) +
+  geom_vline(xintercept = movie_date, col = "grey60", lty = 2) +
+  coord_cartesian(ylim = c(0, 1), expand = FALSE) +
+  ylab("Probability of at least a 2-fold effect")
+```
+
+```{r}
+dat$p <- apply(pred_diff, 2, function(x) mean(x > 3))
+ggplot(dat, aes(date, p)) + geom_line() + xlim(date_start, NA) +
+  geom_vline(xintercept = movie_date, col = "grey60", lty = 2) +
+  coord_cartesian(ylim = c(0, 1), expand = FALSE) +
+  ylab("Probability of at least a 2-fold effect")
+```
+
+# brms
+
+Bonus:
+
+```{r, eval=FALSE}
+library(brms)
+m1 <- brm(
+  formula = Paracanthurus_hepatus ~
+    Chrysiptera_parasema +
+    Chrysiptera_hemicyanea +
+    Acanthurus_nigricans +
+    Acanthurus_sohal +
+    Acanthurus_japonicus +
+    Acanthurus_coeruleus +
+    Acanthurus_leucosternon,
+  data = filter(dat, before_movie),
+  family = Beta(link = "logit"),
+  save_model = "brm-model.stan",
+  prior = c(
+    set_prior("normal(0, 2)", class = "b"),
+    set_prior("normal(0, 10)", class = "Intercept"),
+    set_prior("student_t(3, 0, 25)", class = "phi"))
+)
+```

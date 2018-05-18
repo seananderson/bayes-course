@@ -16,7 +16,6 @@ output:
 - Practice comparing a parameter posterior to its prior distribution to assess
   the information in the data.
 
-
 # Package loading and option setting
 
 We'll start by loading packages and setting some options:
@@ -60,7 +59,7 @@ ggplot(d, aes(year, log(abund_index))) +
   geom_point() + geom_line()
 ```
 
-The large dips in abundance you see are a result of cold snowy winters when the heron couldn't find food.
+The large dips in abundance you see are a result of cold snowy winters when the herons couldn't find food.
 
 # The model
 
@@ -78,7 +77,7 @@ Take a look at the model and make sure you understand it. This is fundamentally 
 
 We can fit that model with Stan:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, results='hide'}
 m <- stan("stan/gompertz.stan",
   data = list(N = nrow(d), y = log(d$abund_index), nu_rate = 0.01),
   iter = 2000)

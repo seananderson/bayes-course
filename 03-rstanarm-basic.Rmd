@@ -47,9 +47,7 @@ We are going to work with data from:
 
 Hughes, B.B., Lummis, S.C., Anderson, S.C., and Kroeker, K.J. 2018. Unexpected resilience of a seagrass system exposed to global stressors. Glob. Change Biol. 24(1): 224–234. <https://doi.org/10.1111/gcb.13854>
 
-Basic description of the data here. TODO
-
-Change in seahare, a sea slug, (Phyllaplysia taylori) biomass after... marine gastropod
+The data come from a mesocosm experiment by Brent Hughes where he manipulated water pH and whether or not nutrients were added (to represent nutrient loads in eelgrass beds) to 14 200L barrels. He measured a number of variables, but the response variable we are going to work with here is the increase in mass of seahares (Phyllaplysia taylori), a type of sea slug, after 24 days.
 
 ```{r}
 d <- readRDS("data/hughes-etal-2018.rds") %>%

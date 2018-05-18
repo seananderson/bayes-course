@@ -1,0 +1,138 @@
+---
+title: "Fitting von Bertalanffy growth curves with error using Stan"
+output: html_document
+---
+
+```{r}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+
+```{r}
+library(dplyr)
+dd <- readRDS("~/src/gfsynopsis/report/data-cache2/pbs-survey-samples.rds")
+dd2 <- readRDS("~/src/gfsynopsis/report/data-cache2/pbs-age-precision.rds")
+
+d <- filter(dd, species_common_name == "shortraker rockfish", major_stat_area_name == "5E: WEST COAST Q.C. ISLANDS")
+d2 <- filter(dd2, species_common_name == "SHORTRAKER ROCKFISH")
+
+x <- gfplot::tidy_age_precision(d2)
+m <- lm(log(prim_age) ~ log(prec_age) - 0, data = x)
+summary(m)
+
+d <- d[!duplicated(select(d, specimen_id)), , drop = FALSE]
+
+# d <- inner_join(d, select(d2, specimen_id, specimen_age)
+
+d <- filter(d, !is.na(age), !is.na(length), sex == 2)
+nrow(d)
+library(ggplot2)
+ggplot(d, aes(age, length)) + geom_point(aes(colour = (year))) +
+  viridis::scale_color_viridis()
+```
+
+```{r}
+newdata <- data.frame(age = seq(min(d$age), max(d$age), length.out = 100))
+```
+
+```{r}
+library(rstan)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+vb_fit <- stan("vb.stan",
+  data = 
+    list(
+      age = d$age,
+      length = d$length,
+      N = length(d$age),
+      N_pred = nrow(newdata),
+      age_pred = newdata$age),
+  iter = 2000, chains = 1)
+
+pars <- c("k", "linf", "sigma", "t0")
+library(bayesplot)
+theme_set(theme_light())
+vb_fit_array <- as.array(vb_fit)
+mcmc_trace(vb_fit_array, pars = pars)
+mcmc_hist(vb_fit_array, pars = pars)
+mcmc_dens(vb_fit_array, pars = pars)
+```
+
+```{r}
+vb_fit2 <- stan("vb-fixed-error.stan",
+  data = 
+    list(
+      age = d$age,
+      length = d$length,
+      N = length(d$age),
+      N_pred = nrow(newdata),
+      age_pred = newdata$age,
+      error = 0.2), # CV of ~0.5 error
+  iter = 1000, chains = 1, 
+  pars = c("k", "linf", "sigma", "t0", "length_pred", "posterior_predictions"))
+vb_fit2
+
+vb_fit_array2 <- as.array(vb_fit2)
+mcmc_trace(vb_fit_array2, pars = c("k", "linf", "sigma", "t0"))
+mcmc_hist(vb_fit_array2, pars = c("k", "linf", "sigma", "t0"))
+```
+
+```{r}
+vb_fit2 <- stan("vb-fixed-length-error.stan",
+  data = 
+    list(
+      age = d$age,
+      length = d$length,
+      N = length(d$age),
+      N_pred = nrow(newdata),
+      age_pred = newdata$age,
+      error = 0.05), # CV of ~0.1 error
+  iter = 800, chains = 2, seed = 29348,
+  control = list(adapt_delta = 0.99, max_treedepth = 20),
+  pars = c("k", "linf", "sigma", "t0", "length_pred", "posterior_predictions"))
+vb_fit2
+
+vb_fit_array2 <- as.array(vb_fit2)
+mcmc_trace(vb_fit_array2, pars = c("k", "linf", "sigma", "t0"))
+mcmc_hist(vb_fit_array2, pars = c("k", "linf", "sigma", "t0"))
+```
+
+```{r}
+e <- extract(vb_fit)
+e2 <- extract(vb_fit2)
+median(e$k)
+median(e2$k)
+
+quantile(e$k)
+quantile(e2$k)
+
+median(e$linf)
+median(e2$linf)
+
+quantile(e$linf)
+quantile(e2$linf)
+
+median(e$sigma)
+median(e2$sigma)
+```
+
+```{r}
+newdata$length <- apply(e$length_pred, 2, median)
+newdata$length2 <- apply(e2$length_pred, 2, median)
+
+ppc_dens_overlay(d$length, e$posterior_predictions[1:10, ])
+ppc_dens_overlay(d$length, e2$posterior_predictions[1:10, ])
+
+ggplot(d, aes(age, length)) + geom_point(aes(colour = as.factor(major_stat_area_name))) +
+  geom_line(data = newdata, aes(age, length), alpha = 0.5) +
+  geom_line(data = newdata, aes(age, length2), alpha = 0.5, lty = 2)
+```
+
+
+
+
+
