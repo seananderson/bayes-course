@@ -7,7 +7,7 @@ output:
     toc_float: true
 ---
 
-# Goals 
+# Goals
 
 - Develop an intuition for Bayes' theorem and Bayesian updating
 - See the inner workings of how easy it is to apply Bayes' rule with a 'grid 

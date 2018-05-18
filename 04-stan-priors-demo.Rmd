@@ -12,7 +12,7 @@ output: html_document
 
 First, run the following code chunk, which includes a function to simulate data and fit a regression using `rstanarm::stan_glm()`.
 
-```{r}
+```{r, message=FALSE, warning=FALSE, results='hide'}
 library(ggplot2)
 library(rstanarm)
 theme_set(theme_light())
@@ -100,13 +100,13 @@ mcmc_example()
 
 In the plots, the gray histograms represent the posterior samples, the blue lines represent the priors, and the red lines represent the true values. The last panel represents the simulated data (dots), the true relationship between y and x (red line), and 50 draws from the posterior distribution. 
 
-Try running the following code chunk and adjusting the argument values. If you adjust the `seed` slider, you will change the random number generator draw. Note that the single predictor, `x`, which could represent any continuous predictor, has been centered on its meaning and divided by 2 times its standard deviation. Remember that the choice of scale or standard deviation value for the priors is dependent on the scale of the predictor and response variable. 
+Try running the following code chunk and adjusting the argument values. If you adjust the `seed` slider, you will change the random number generator draw. Note that the single predictor, `x`, which could represent any continuous predictor, has been centered on its mean and divided by 2 times its standard deviation. Remember that the choice of scale or standard deviation value for the priors is dependent on the scale of the predictor and response variable. 
 
 You may consider asking questions like:
 
-- Have a tight prior on the slope coefficient that differs from the true value?
+- What happens if you have a tight prior on the slope coefficient that differs from the true value?
 - How does this change when you have a lot of data vs. a little? 
-- How much how much data do I need before the data overwhelm the prior for a given discrepancy between the prior and data?
+- How much data do I need before the data overwhelm the prior for a given discrepancy between the prior and data?
 - What happens with a very diffuse prior on the slope coefficient and very few data points? 
 - Are there scenarios where it's helpful to have a weakly informative prior on the observation error standard deviation?
 - Can having an informative prior on the slope coefficient help if you've collected very little data? When might you have this kind of information? 
