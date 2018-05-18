@@ -5,7 +5,7 @@ output: html_document
 
 # Stan resources
 
-The main documentation. Don't miss the manual itself:
+The main documentation. Don't miss the ~640 page manual itself (but don't be intimidated by it):
 <http://mc-stan.org/users/documentation/>
 
 Stan Best Practices:
@@ -26,7 +26,7 @@ Forums:
 Examples from many textbooks converted into Stan:
 <https://github.com/stan-dev/example-models>
 
-A relatively new package that looks very useful for manipulating Stan output:
+A relatively new package that looks very useful for manipulating Stan and other MCMC output:
 <https://github.com/mjskay/tidybayes>
 
 Visualize MCMC algorithms including NUTS:
@@ -36,26 +36,26 @@ Visualize MCMC algorithms including NUTS:
 
 Hobbs, N.T., and Hooten, M.B. 2015. Bayesian models: a statistical primer for ecologists. Princeton University Press, Princeton, New Jersey.
 
-- The best textbook I found on the fundamentals of Bayesian models from an ecologist's perspective. I've never found another book that filled in so many gaps in understanding that I had. An excellent resource on how to read and write Bayesian models. Note that this textbook does not focus on code. 
+- The best textbook I've found on the fundamentals of Bayesian models from an ecologist's perspective. I've never found another book that filled in so many gaps in understanding that I had. An excellent resource on how to read and write Bayesian models. Note that this textbook does not focus on code. 
 
 McElreath, R. 2016. Statistical rethinking: a Bayesian course with examples in R and Stan. CRC Press/Taylor & Francis Group, Boca Raton.
 
-- A fantastic textbook that will help you think about Bayesian modeling and modeling in general. Perhaps the one downside is that it uses the author's `rethinking` R package throughout which is great for pedagogical perspective but not great if you want to learn Stan code itself. 
+- A fantastic textbook that will help you think about Bayesian modeling and modeling in general. Perhaps the one downside is that it uses the author's `rethinking` R package throughout which is great from pedagogical perspective but not great if you want to learn Stan code itself. Still very much worth it though. Stan code itself is relatively easy to learn once you understand the concepts. And in many cases there's no need to write the code yourself anyways. 
 - See this repository that includes most of the examples reworked with the brms package and ggplot2: <https://github.com/ASKurz/Statistical_Rethinking_with_brms_ggplot2_and_the_tidyverse>
 
 Gelman, A., and J. Hill. 2007. Data Analysis Using Regression and Multilevel/Hierarchical Models. Cambridge University Press, Cambridge, UK
 
-- An excellent textbook on regression and hierarchical modeling. Starts with lme4 and then gets into Bayesian modeling with WinBUGS/JAGS. Is currently being rewritten with Stan. Examples are mostly from the social, political, and health sciences, but applicable to anything. Also deals with causal inference.
+- An excellent textbook on regression and hierarchical modeling. Starts with GLMs and the lme4 package for mixed effects models and then gets into Bayesian modeling with WinBUGS/JAGS. It is currently being rewritten with Stan. Examples are mostly from the social, political, and health sciences, but applicable to anything. Also deals with causal inference.
 - Note that the exercises have been translated into Stan here: <https://github.com/stan-dev/example-models/wiki/ARM-Models>
 
 Gelman, A., J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin. 2014. Bayesian Data Analysis. Chapman & Hall, Boca Raton, FL.
 
 - The Bayesian data analysis bible, but definitely not easy reading.
 
-# Not specifically about Bayesian modeling but still very useful 
-
-Gelman, A. 2008. Scaling regression inputs by dividing by two standard deviations. Statistics in Medicine 27:2865–2873.
+# Not specifically about Bayesian modeling but still very useful
 
 Schielzeth, H. 2010. Simple means to improve the interpretability of regression coefficients. Methods in Ecology and Evolution 1:103–113.
+
+Gelman, A. 2008. Scaling regression inputs by dividing by two standard deviations. Statistics in Medicine 27:2865–2873.
 
 Morey, R. D., Hoekstra, R., Rouder, J., Lee, M. D., and Wagenmakers, E. (2016). The fallacy of placing confidence in confidence intervals. Psychonomic Bulletin & Review. 23(1), 103–123.
