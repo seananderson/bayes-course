@@ -7,6 +7,16 @@ output:
     toc_float: true
 ---
 
+# Goals 
+
+- Develop an intuition for Bayes' theorem and Bayesian updating
+- See the inner workings of how easy it is to apply Bayes' rule with a 'grid 
+  search' approach (for very simple problems)
+- Become familiar with the various ways we can summarize samples from a 
+  posterior distribution
+
+# Setup
+
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -20,13 +30,13 @@ knitr::opts_chunk$set(
 ```{r, message=FALSE, warning=FALSE}
 library(ggplot2)
 library(dplyr)
-theme_set(theme_light())
+theme_set(ggsidekick::theme_sleek())
 ```
 
 # Bayesian updating of the posterior
 
 ```{r}
-dat <- c("L", "W")
+dat <- c("W", "L")
 length(dat)
 dat <- ifelse(dat == "W", 1, 0)
 
@@ -58,11 +68,11 @@ for (i in seq_along(dat)) {
 out <- bind_rows(out)
 
 ggplot(out, aes(x = p, ymax = posterior, ymin = 0, group = toss)) +
-  geom_ribbon(alpha = 0.3, fill = "red") +
-  geom_ribbon(aes(x = p, ymax = prior, ymin = 0), alpha = 0.3) +
+  geom_ribbon(alpha = 0.1, fill = "red") +
+  geom_ribbon(aes(x = p, ymax = prior, ymin = 0), alpha = 0.1) +
   coord_cartesian(expand = FALSE) +
   xlab("Proportion water") +
-  ylab("Probability density")  +
+  ylab("Probability density") +
   facet_wrap(~toss)
 ```
 
@@ -166,4 +176,3 @@ We can also easily calculate how much probability there is between specific valu
 mean(post_samples > 0.6 & post_samples < 0.8)
 g + geom_vline(xintercept = c(0.6, 0.8))
 ```
-

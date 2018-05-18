@@ -7,6 +7,13 @@ output:
     toc_float: true
 ---
 
+# Goals 
+
+- Demystify MCMC sampling by coding one ourselves in R and manually updating it
+- Gain an intuition for the need to tune MCMC algorithms with interactive visualization
+
+# Setup and data simulation
+
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -17,7 +24,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-Run this next code chunk once:
+Run this next code chunk once to generate our data.
 
 ```{r}
 set.seed(123)
@@ -35,6 +42,8 @@ jump_sd <- 1
 i <- 1
 previous_proposal <- 0
 ```
+
+# Manually running our MCMC algorithm
 
 Run this next code chunk repeatedly:
 
@@ -77,6 +86,8 @@ i <- i + 1 # update counter for next time
 ```
 
 # MCMC tuning demo
+
+The following coach chunk contains the same code but embedded in a function so that we can call it repeatedly with different argument values. 
 
 ```{r}
 mcmc_example <- function(
@@ -170,7 +181,6 @@ mcmc_example <- function(
 ```{r}
 mcmc_example()
 ```
-
 
 ```{r, eval=FALSE}
 library(manipulate)

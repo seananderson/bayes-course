@@ -10,6 +10,8 @@ output:
 # Goals 
 
 - Learn the basics of Stan model syntax and how to interact with Stan in R
+- Learn to generate our own posterior predictions from a Stan model 
+- Learn to calculate LOOIC from a Stan model we wrote ourselves
 
 # Setup 
 

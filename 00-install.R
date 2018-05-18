@@ -60,8 +60,9 @@ devtools::has_devel()
 # xcode-select --install
 
 # On a PC:
+# Make sure to check the checkbox to modify your "path"!!
 # https://thecoatlessprofessor.com/programming/installing-rtools-for-compiled-code-via-rcpp/
-# Makes sure to check the checkbox to modify your "path"!
+# Make sure to check the checkbox to modify your "path"!!
 
 # Restart R
 

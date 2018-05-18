@@ -7,6 +7,20 @@ output:
     toc_float: true
 ---
 
+# Goals
+
+- Gain exposure to programming a (timeseries) model in Stan that isn't a simple
+  linear regression.
+- Practice interacting with Stan.
+- Practice drawing inference from the posterior samples on a parameter.
+- Practice comparing a parameter posterior to its prior distribution to assess
+  the information in the data.
+
+
+# Package loading and option setting
+
+We'll start by loading packages and setting some options:
+
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -19,19 +33,6 @@ show_file = function(file) {
   cat(paste(readLines(file), collapse = "\n"))
 }
 ```
-
-# Goals
-
-- Gain exposure to programming a (timeseries) model in Stan that isn't a simple
-  linear regression.
-- Practice interacting with Stan.
-- Practice drawing inference from the posterior samples on a parameter.
-- Practice comparing a parameter posterior to its prior distribution to assess
-  the information in the data.
-
-# Package loading and option setting
-
-We'll start by loading packages and setting some options:
 
 ```{r, warning=FALSE, message=FALSE}
 library(tidyverse)
