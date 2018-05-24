@@ -36,7 +36,7 @@ theme_set(theme_light())
 # Bayesian updating of the posterior
 
 ```{r}
-dat <- c("W", "L")
+dat <- c("W", "L", "W", "W", "L", "W")
 length(dat)
 dat <- ifelse(dat == "W", 1, 0)
 
