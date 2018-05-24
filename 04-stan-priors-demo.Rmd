@@ -1,5 +1,5 @@
 ---
-title: "Demo of the influce of priors in a basic Stan regression"
+title: "Demo of the influence of priors in a basic Stan regression"
 author: "Sean Anderson"
 output: html_document
 ---

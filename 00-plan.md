@@ -13,7 +13,7 @@ output: html_document
 
 4. Learn how to assess the relative contribution of priors vs. the data. Learn the difference between weakly informative and informative priors. Learn what some common choices of weakly informative priors are.
 
-5. Learn the basics of Stan model syntax and how to interact with Stan in R. If there is time experience one 'non-standard' model: a population-growth time series model.
+5. Learn the basics of Stan model syntax and how to interact with Stan in R. If there is time, experience one 'non-standard' model: a population-growth time series model.
 
 6. Leave with some ideas for how to describe Bayesian models in publications and where to find more information.
 
