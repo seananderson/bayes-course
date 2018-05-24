@@ -12,7 +12,7 @@ output: html_document
 
 I've simulated and fit models to 2 data sets. Each model has some issue and not the probability model does not represent the data well. See if you can figure out what the problem is by using posterior protective checks. 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(rstanarm)
 ```
 
