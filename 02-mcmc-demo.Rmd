@@ -31,7 +31,6 @@ set.seed(123)
 mu <- 1
 sigma <- 2
 dat <- rnorm(50, mean = mu, sd = sigma) # our simulated data
-par(mfrow = c(1, 1))
 plot(dat)
 ```
 
@@ -47,7 +46,7 @@ previous_proposal <- 0
 
 Run this next code chunk repeatedly:
 
-```{r}
+```{r, eval=FALSE}
 (proposal <- rnorm(1, previous_proposal, jump_sd))
 # ----------------------------------------------------------------
 
