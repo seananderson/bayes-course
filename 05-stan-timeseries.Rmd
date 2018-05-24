@@ -150,8 +150,8 @@ This choice of prior is based on Fernandez C, Steel MFJ (1998) On Bayesian model
 Since our models are fit in a Bayesian framework, one useful value to calculate might be the probability density below some threshold value for the degrees of freedom parameter. For example:
 
 ```{r}
-nu <- extract(m, pars = "nu")[[1]]
-nu_hw <- extract(m_hw, pars = "nu")[[1]]
+nu <- rstan::extract(m, pars = "nu")[[1]]
+nu_hw <- rstan::extract(m_hw, pars = "nu")[[1]]
 
 sum(nu < 10)/length(nu) # or mean(nu < 10)
 sum(nu_hw < 10)/length(nu) 
@@ -197,11 +197,11 @@ m_stronger_prior <- stan("stan/gompertz.stan",
 ```
 
 ```{r}
-nu <- extract(m, pars = "nu")[[1]]
+nu <- rstan::extract(m, pars = "nu")[[1]]
 mean(nu < 10)
-nu_weaker_prior <- extract(m_weaker_prior, pars = "nu")[[1]]
+nu_weaker_prior <- rstan::extract(m_weaker_prior, pars = "nu")[[1]]
 mean(nu_weaker_prior < 10)
-nu_stronger_prior <- extract(m_stronger_prior, pars = "nu")[[1]]
+nu_stronger_prior <- rstan::extract(m_stronger_prior, pars = "nu")[[1]]
 mean(nu_stronger_prior < 10)
 ```
 
