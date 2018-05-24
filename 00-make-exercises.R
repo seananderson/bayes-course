@@ -8,3 +8,5 @@ remove_exercises <- function(x) {
   writeLines(as.character(f_ex), con = x)
 }
 purrr::walk(files, remove_exercises)
+
+# purrr::walk(files, rmarkdown::render)
