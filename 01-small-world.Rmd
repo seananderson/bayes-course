@@ -138,7 +138,7 @@ q_median <- median(post_samples)
 g + geom_vline(xintercept = q) + geom_vline(xintercept = q_median, lty = 2)
 ```
 
-We can also calculate quantifiable credible intervals. For this we just use the `quantile()` function to figure out the appropriate thresholds for a given probability. Here we will calculate an 80% credible interval.
+We can also calculate quantile credible intervals. For this we just use the `quantile()` function to figure out the appropriate thresholds for a given probability. Here we will calculate an 80% credible interval.
 
 ```{r}
 q <- quantile(post_samples, probs = c(0.1, 0.9))
