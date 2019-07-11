@@ -174,7 +174,7 @@ ggplot(dat, aes(x, y)) + geom_point() +
     alpha = 0.2)
 ```
 
-Is that starting to look like the confidence/credible intervals are used to looking at?
+Is that starting to look like the confidence/credible intervals you are used to looking at?
 
 What if we wanted to look at posterior predictions? We can do that with the `posterior_predictions` samples that we created from the `generated quantities` section of our Stan model. We did that above. Let's do it in R to see how we could create them after.
 
