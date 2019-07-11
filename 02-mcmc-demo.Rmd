@@ -86,7 +86,7 @@ i <- i + 1 # update counter for next time
 
 # MCMC tuning demo
 
-The following coach chunk contains the same code but embedded in a function so that we can call it repeatedly with different argument values. 
+The following code chunk contains the same code but embedded in a function so that we can call it repeatedly with different argument values. 
 
 ```{r}
 mcmc_example <- function(
