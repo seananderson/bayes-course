@@ -5,7 +5,7 @@ output: html_document
 
 # Stan resources
 
-The main documentation. Don't miss the ~640 page manual itself (but don't be intimidated by it):
+The main documentation:
 <http://mc-stan.org/users/documentation/>
 
 Stan Best Practices:

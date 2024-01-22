@@ -90,7 +90,7 @@ show_file("stan/lm.stan")
 
 # Fitting the model
 
-The first time we run the next code chunk, Stan will translate our model into C++ and compile it. This will take little while. After that, assuming we set `rstan_options(auto_write = TRUE)`, Stan will avoid recompiling the model and less something in the model code changes.
+The first time we run the next code chunk, Stan will translate our model into C++ and compile it. This will take a little while. After that, assuming we set `rstan_options(auto_write = TRUE)`, Stan will avoid recompiling the model unless something in the model code changes.
 
 Let's sample from the model now:
 
@@ -101,7 +101,7 @@ fit <- stan("stan/lm.stan", chains = 4, iter = 2000,
 
 Congratulations --- you fit your first handwritten Stan model! We can do everything with the posterior samples that we could do with the samples from an rstanarm model or a brms model.
 
-Some of the built-in helper functions and those packages won't work with our model though.
+Some of the built-in helper functions from those packages won't work with our model though.
 
 ```{r, eval=FALSE}
 fit

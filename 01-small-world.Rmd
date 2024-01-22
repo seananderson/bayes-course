@@ -138,14 +138,14 @@ q_median <- median(post_samples)
 g + geom_vline(xintercept = q) + geom_vline(xintercept = q_median, lty = 2)
 ```
 
-We can also calculate quantile credible intervals. For this we just use the `quantile()` function to figure out the appropriate thresholds for a given probability. Here we will calculate an 80% credible interval.
+We can also calculate quantile credible intervals. For this, we just use the `quantile()` function to figure out the appropriate thresholds for a given probability. Here we will calculate an 80% credible interval.
 
 ```{r}
 q <- quantile(post_samples, probs = c(0.1, 0.9))
 g + geom_vline(xintercept = q)
 ```
 
-The Highest Posterior Density (HPD) interval is the short as possible credible interval with the appropriate probability coverage. It's harder to calculate, so we will rely on an existing function. This is probably much more rarely used than the quantile credible intervals. 
+The Highest Posterior Density (HPD) interval is the shortest possible credible interval with the appropriate probability coverage. It's harder to calculate, so we will rely on an existing function. Quantile-based credible intervals are usually more common.
 
 ```{r}
 q_hpd <- coda::HPDinterval(coda::as.mcmc(post_samples), prob = 0.8)
@@ -162,7 +162,7 @@ q
 g + geom_vline(xintercept = q)
 ```
 
-Or we can go even further than just calculating credible intervals. For example, we can calculate how much probability "mass" is above 0.5. This tells us the probability that there is more than 50% water on the globe, (conditional on ...).
+Or we can go even further than just calculating credible intervals. For example, we can calculate how much probability density is above 0.5. This tells us the probability that there is more than 50% water on the globe, (conditional on our model and data).
 
 ```{r}
 sum(post_samples > 0.5) / length(post_samples)
@@ -170,7 +170,7 @@ mean(post_samples > 0.5)
 g + geom_vline(xintercept = 0.5)
 ```
 
-We can also easily calculate how much probability there is between specific values. For example, what is the probability that there is between 60 and 80% water?
+We can also easily calculate how much probability there is between specific values. For example, what is the probability that there is between 60% and 80% water?
 
 ```{r}
 mean(post_samples > 0.6 & post_samples < 0.8)
