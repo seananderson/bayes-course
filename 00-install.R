@@ -85,7 +85,7 @@ cat("Please wait a minute while the model compiles.\n")
 fit1 <- stan(model_code = scode, iter = 50, verbose = FALSE, chains = 1)
 
 if (identical(class(fit1)[[1]], "stanfit")) {
-  cat("Stan is working. Congratulations! You're done. You can ignore any warnings about 'Bayesian Fraction of Missing Information'.\n")
+  cat("Stan is working. Congratulations! You're done. You can ignore any warnings about 'R-hat and effective sample sizes' here.\n")
 } else {
   cat("Stan is *not* working. Please contact Sean at <sean@seananderson.ca> or in person.\n")
 }
