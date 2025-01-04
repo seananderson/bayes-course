@@ -26,6 +26,8 @@ knitr::opts_chunk$set(
 
 Run this next code chunk once to generate our data.
 
+We are are simulating data with a given mean and standard deviation. We'll effectively be estimating an intercept-only model.
+
 ```{r}
 set.seed(123)
 mu <- 1
@@ -42,11 +44,16 @@ plot(1, xlim = c(0, 30), ylim = c(-2, 2), type = "n", ylab = expression(mu),
 jump_sd <- 1 # our chosen jumping standard deviation
 i <- 1 # starting iteration
 previous_proposal <- 0 # initial proposal value
+set.seed(123)
 ```
 
 # Manually running our MCMC algorithm
 
 Run this next code chunk repeatedly; each MCMC sample will get added to the open plot.
+
+Things to be aware of:
+- We're going to chose a prior of Normal(0, 5^2), i.e. `dnorm(mean = 0, sd = 5)`.
+- We're going to assume we know the error standard deviation `sigma` so we can keep this example simple and have only one parameter.
 
 ```{r, eval=FALSE}
 (proposal <- rnorm(1, previous_proposal, jump_sd))
@@ -76,14 +83,22 @@ Run this next code chunk repeatedly; each MCMC sample will get added to the open
 # If the probability ratio is < 1, then accept the new parameter values in
 # proportion to the ratio.
 if (runif(1) < prob_ratio) {
+  print("Accept new proposal")
   (previous_proposal <- proposal)
 } else {
+  print("Retain previous value")
   (previous_proposal <- previous_proposal)
 }
 # ----------------------------------------------------------------
 
 points(i, previous_proposal)
 i <- i + 1 # update counter for next time
+```
+
+You now have an MCMC chain! The distribution of those values (if you take enough of them) will reflect the distribution of the parameter(s).
+
+```{r}
+abline(h = mu, lty = 2) # our known true value
 ```
 
 # MCMC tuning demo
@@ -93,7 +108,7 @@ The following code chunk contains the same code but embedded in a function so th
 ```{r}
 mcmc_example <- function(
   mu = 4, # the true mean; we will estimate this
-  sigma = 5, # the true residual SD; we will assume we know this for simplicity
+  sigma = 2, # the true residual SD; we will assume we know this for simplicity
   .n = 30, # number of data points to simulate
   prior_mu = 0, # our prior distribution mean
   prior_mu_sd = 10, # our prior distribution SD on the mean
@@ -105,7 +120,8 @@ mcmc_example <- function(
   # the chain may get stuck and take a very long time to converge on an
   # appropriate answer.
   jump_sd = 5,
-  reps = 10000 # the length of our MCMC chain
+  reps = 10000, # the length of our MCMC chain
+  seed = sample.int(.Machine$integer.max, 1)
 ) {
   dat <- rnorm(.n, mean = mu, sd = sigma) # our simulated data
 
@@ -151,7 +167,7 @@ mcmc_example <- function(
     if (runif(1, min = 0, max = 1) < prob_ratio) {
       out[i] <- proposal # use the proposed parameter value
     } else {
-      out[i] <- out[i - 1] # keep the previous parmaeter value
+      out[i] <- out[i - 1] # keep the previous parameter value
     }
   }
 
@@ -164,7 +180,7 @@ mcmc_example <- function(
   ) # the MCMC chain
   abline(h = mu, col = "red", lty = 1, lwd = 2) # the true mean
   hist(out,
-    xlim = c(-5, 5),
+    xlim = c(-2, 7), breaks = 30,
     main = "Prior (line)\nand Posterior (histogram)", xlab = "mu"
   )
   abline(v = mu, col = "red", lty = 1, lwd = 2)
@@ -179,7 +195,7 @@ mcmc_example <- function(
 }
 ```
 
-Now, we'll call our function, which by default will taked 10,000 MCMC samples:
+Now, we'll call our function, which by default will take 10,000 MCMC samples:
 
 ```{r}
 mcmc_example()
@@ -192,20 +208,31 @@ library(manipulate)
 manipulate(
   mcmc_example(
     mu = mu,
-    sigma = 2,
+    sigma = sigma,
     .n = .n,
     prior_mu = 0,
     prior_mu_sd = 10,
     jump_sd = jump_sd,
-    reps = reps
+    reps = reps,
+    seed = 42
   ),
-  mu = slider(0, 5, 1),
-  # sigma = slider(0.1, 10, 5),
-  .n = slider(2, 1000, 25),
-  # prior_mu = slider(-10, 10, 0),
-  # prior_mu_sd = slider(0.1, 100, 2, step = 0.1),
-  jump_sd = slider(0.1, 50, 10, step = 0.1),
-  # thin = slider(1, 100, 5),
-  reps = slider(30, 20000, 1000)
+  mu = slider(0, 5, 1, step = 0.1),
+  sigma = slider(0.1, 10, 5, step = 0.1),
+  .n = slider(5, 1000, 25, step = 5),
+  jump_sd = slider(0.05, 40, 5, step = 0.1),
+  reps = slider(50, 20000, 1000, step = 50),
+  seed = slider(1, 50, 42, step = 1)
 )
 ```
+
+# Questions:
+
+1. What happens to the posterior as the number of data points (`.n`) gets large?
+
+2. What happens to the posterior as the number of data points (`.n`) gets small?
+
+3. What happens to the posterior as the observation error (`sigma`) gets larger?
+
+4. What happens if the jump distance gets very big?
+
+5. What happens if the jump distance gets very small?

@@ -13,6 +13,7 @@ output: html_document
 I've simulated and fit models to 2 data sets. Each model has some issue such that the probability model does not represent the data generating process well. See if you can figure out what the problem is by using posterior protective checks. 
 
 ```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
 library(rstanarm)
 ```
 
@@ -24,21 +25,26 @@ Load the data:
 d <- readRDS("data/ppcheck1.rds")
 ```
 
-For both of these exercises the data is a simple data frame with one predictor `x` and one response variable `y`.
+For both of these exercises the data are a simple data frame with one predictor `x` and one response variable `y`.
 
-We will fit simple linear regressions to the data.
+```{r}
+ggplot(d, aes(x, y)) + geom_point()
+```
+
+We will fit simple linear regressions to the data. Let's not worry about priors for this exercise.
 
 ```{r, results='hide', message=FALSE}
 fit <- stan_glm(
   y ~ x,
-  data = d, iter = 2000, chains = 4) # let's not worry about priors for this exercise
+  data = d
+)
 ```
 
 Now use `pp_check()` to inspect the model. Can you find what looks wrong? What might be generating the problem? 
 
 # Exercise 2
 
-Again, load the following data and try fitting a simple linear model to it. Use posterior predictive checks to inspect the model. Does something look wrong with this model? Do the data look like a random sample from the posterior? 
+Again, load the following data and try fitting a linear regression model to it. Use posterior predictive checks to inspect the model. Does something look wrong with this model? Do the data look like a random sample from the posterior? 
 
 ```{r}
 d <- readRDS("data/ppcheck2.rds")
@@ -47,5 +53,6 @@ d <- readRDS("data/ppcheck2.rds")
 ```{r, results='hide', message=FALSE}
 fit2 <- stan_glm(
   y ~ x,
-  data = d, iter = 2000, chains = 4) # let's not worry about priors for this exercise
+  data = d
+)
 ```

@@ -28,26 +28,12 @@ please_install <- function(pkgs, install_fun = install.packages) {
 pkgs <- c(
   "tidyverse", "rstan", "rstanarm", "brms", "rmarkdown",
   "manipulate", "shiny", "usethis", "bayesplot", "loo",
-  "devtools", "gridExtra", "cowplot", "arm", "extraDistr"
+  "devtools", "gridExtra", "patchwork", "extraDistr"
 )
 have <- rownames(installed.packages())
 needed <- setdiff(pkgs, have)
 
 please_install(needed)
-
-# Do you have the latest RStudio? ---------------------------------------
-
-if (rstudioapi::getVersion() < "1.1.447") {
-  cat("Please install the latest version of RStudio from https://www.rstudio.com/products/rstudio/download/\n")
-}
-
-# Do you have the latest R? ---------------------------------------
-
-d <- sessionInfo()
-r_version <- paste0(d$R.version$major, ".", gsub("\\.", "", d$R.version$minor))
-if (r_version < "3.4") {
-  cat("Please install the latest version of R from https://cran.r-project.org/\n")
-}
 
 # Do you have build tools? ---------------------------------------
 devtools::has_devel()
@@ -60,9 +46,8 @@ devtools::has_devel()
 # xcode-select --install
 
 # On a PC:
-# Make sure to check the checkbox to modify your "path"!!
-# https://thecoatlessprofessor.com/programming/installing-rtools-for-compiled-code-via-rcpp/
-# Make sure to check the checkbox to modify your "path"!!
+# Install the Rtools version that matches your version of R
+# DFO users can find this in the Software Center
 
 # Restart R
 
@@ -85,7 +70,7 @@ cat("Please wait a minute while the model compiles.\n")
 fit1 <- stan(model_code = scode, iter = 50, verbose = FALSE, chains = 1)
 
 if (identical(class(fit1)[[1]], "stanfit")) {
-  cat("Stan is working. Congratulations! You're done. You can ignore any warnings about 'R-hat and effective sample sizes' here.\n")
+  cat("Stan is working. Congratulations! You're done. You can ignore any warnings about 'R-hat' and 'Effective Samples Size (ESS)' above\n")
 } else {
-  cat("Stan is *not* working. Please contact Sean at <sean@seananderson.ca> or in person.\n")
+  cat("Stan is *not* working. Please ask ask a coworker or contact Sean.\n")
 }

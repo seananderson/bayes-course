@@ -186,7 +186,7 @@ g3 <- ggplot(tibble(prior), aes(prior)) + geom_density() +
   ggtitle("stronger prior") +
   coord_cartesian(xlim = c(0, 100))
 
-cowplot::plot_grid(g1, g2, g3)
+patchwork::wrap_plots(g1, g2, g3)
 ```
 
 ```{r, message=FALSE, warning=FALSE}

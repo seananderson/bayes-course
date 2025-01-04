@@ -35,13 +35,17 @@ theme_set(theme_light())
 
 # Bayesian updating of the posterior
 
-```{r}
-dat <- c("W", "L", "W", "W", "L", "W")
-length(dat)
-dat <- ifelse(dat == "W", 1, 0)
+We will start by performing an experiment where we "sample" from a spinning globe and record whether a given finger lands on land `L` or water `W`.
 
-N <- 200
-p <- seq(0, 1, length.out = N)
+The goal is to estimate what proportion of the globe is covered in water.
+
+This example has some built-in data from a previous version of that experiment.
+
+```{r}
+dat <- c("W", "L", "W", "W", "L", "W") # data we collected
+dat <- ifelse(dat == "W", 1, 0) # 1 if water, 0 if land
+
+p <- seq(0, 1, length.out = 200) # a sequence of 'proportions water' to evaluate
 
 # --------------------
 # try different priors:
@@ -55,15 +59,15 @@ prior <- dunif(p, 0, 1)
 # prior <- dnorm(p, mean = 0.5, sd = 0.25);prior[1:100] <- 0
 # --------------------
 
-prior <- prior / sum(prior) # make sure it sums to 1
+prior <- prior / sum(prior) # make the prior sum to 1
 
 out <- list()
 for (i in seq_along(dat)) {
   likelihood <- dbinom(sum(dat[i]), size = 1, prob = p) # data likelihood
-  posterior <- likelihood * prior # Bayes rule numerator
-  posterior <- posterior / sum(posterior) # make sure it sums to 1
+  posterior <- likelihood * prior                       # Bayes rule numerator
+  posterior <- posterior / sum(posterior)               # make it sum to 1
   out[[i]] <- data.frame(p, prior, posterior, toss = i) # save it
-  prior <- posterior # for next time
+  prior <- posterior                                    # for next time around
 }
 out <- bind_rows(out)
 
@@ -76,7 +80,9 @@ ggplot(out, aes(x = p, ymax = posterior, ymin = 0, group = toss)) +
   facet_wrap(~toss)
 ```
 
-In the above figure, the grey represents the prior distribution and red represents the posterior distribution. In each panel, we add one observation to our data, take the posterior from the previous calculation and turn it into our new prior, multiply the prior by the data likelihood, and divide that by the sum of all likelihood * prior to make sure it sums to 1.
+In the above figure, the grey represents the prior distribution and red represents the posterior distribution. 
+
+In each panel, we add one observation to our data, take the posterior from the previous calculation and turn it into our new prior, multiply the prior by the data likelihood, and divide that by the sum of all likelihood * prior values to make sure our posterior sums to 1.
 
 # Fitting all the data at once
 
@@ -85,7 +91,7 @@ In the last example we updated are posterior with each additional piece of data.
 Again, try playing with the prior.
 
 ```{r}
-N <- 500 # bigger for smoother histograms below
+N <- 1000 # bigger for smoother histogram plots below
 p <- seq(0, 1, length.out = N)
 
 prior <- dunif(p, 0, 1) / length(p)
@@ -113,7 +119,11 @@ Does that look the same as the final panel of the previous plot?
 
 # Summarizing the posterior with samples
 
-If we sample from the values of `p` in proportion to their probability, we will be drawing samples from the posterior. This makes it really easy to summarize the posterior however we would like. It's just a matter of manipulating the samples. This is also good practice because next we will be using Markov chain Monte Carlo (MCMC), which will always return samples from the posterior.
+If we sample from the values of `p` in proportion to their probability, we will be drawing samples from the posterior. 
+
+This makes it really easy to summarize the posterior however we would like. It's just a matter of manipulating the samples. 
+
+This is also a good warmup practice because next we will be using Markov chain Monte Carlo (MCMC), which will always return samples from the posterior.
 
 ```{r}
 post_samples <- sample(p, prob = posterior, size = 2000, replace = TRUE)
@@ -154,15 +164,18 @@ q_hpd
 g + geom_vline(xintercept = q) + geom_vline(xintercept = q_hpd, lty = 2)
 ```
 
-We can also calculate one-sided credible intervals. For example, we could say that there is a 0.8 probability of there being [blank] or more proportion water on the globe (conditional on our model being reasonable and the data we collected).
+We can also calculate one-sided credible intervals. For example, we could say that there is a 0.8 probability of there being [blank] or more proportion water on the globe (conditional on our model and the data we collected). We will sort the samples and find out the value just past the 0.2 quantile:
 
 ```{r}
-q <- sort(post_samples)[round(0.2 * length(post_samples))]
+threshold_sample <- floor(0.2 * length(post_samples))
+length(post_samples)
+threshold_sample
+q <- sort(post_samples)[threshold_sample]
 q
 g + geom_vline(xintercept = q)
 ```
 
-Or we can go even further than just calculating credible intervals. For example, we can calculate how much probability density is above 0.5. This tells us the probability that there is more than 50% water on the globe, (conditional on our model and data).
+Or instead of picking a given probability threshold, we could calculate the probability above some meaningful value. For example, we can calculate how much probability density is above 0.5. This tells us the probability that there is more than 50% water on the globe (conditional on our model and data).
 
 ```{r}
 sum(post_samples > 0.5) / length(post_samples)
