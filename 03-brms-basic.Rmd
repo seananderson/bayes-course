@@ -77,8 +77,6 @@ d <- mutate(d,
 )
 ```
 
-<!-- We centered the `nutrients` data, which is a binary (0, 1) variable. Why do you think we did that? Does it matter here? -->
-
 Let's look at the data:
 
 ```{r}
@@ -90,7 +88,7 @@ ggplot(d,
 
 # Fitting a model
 
-We are going to fit this model with the `rstanarm::stan_glm()` function. We could also use the `rstanarm::stan_lm()` function, but the linear regression function uses a more complicated prior set up.
+We are going to fit this model with the `brms::brm()` function.
 
 ```{r, results='hide', warning=FALSE}
 fit <- brm(
@@ -314,10 +312,10 @@ prior
 Plot them both:
 
 ```{r}
-# note `..density..` to get probability densities not counts
+# note `after_stat(density)` to get probability densities not counts
 # see `?geom_histogram()`
 ggplot() +
-  geom_histogram(data = post, aes(b_ph_scaled, ..density..), 
+  geom_histogram(data = post, aes(b_ph_scaled, after_stat(density)), 
     bins = 80) +
   geom_ribbon(data = prior, aes(x = b_ph_scaled, 
     ymax = density, ymin = 0), fill = "blue", alpha = 0.5) +
@@ -478,30 +476,3 @@ loo_compare(loo1, loo2)
 ```
 
 So this suggests that we should favour the original model that did not have interactions between nutrients and pH.
-
-# Bonus: The same model fit with the brms package
-
-Both rstanarm and brms for sampling from Stan models without coding the entire model as yourself. Both have some functionality that the other doesn't, although in general brms is even more flexible in the types of models that can fit. The main downside to brms is that it dynamically writes a Stan model and then compiles it before sampling. It also doesn't have auto caching of the compilation step, so you'll have to wait for your model to compile each time you want to sample from it.
-
-```{r, eval=FALSE, message=FALSE}
-fit_brms <- brms::brm(
-  log(change_seahare_mass_g_fw) ~ ph_scaled + I(ph_scaled^2) + nutrients_centered,
-  data = d, iter = 2000, chains = 4,
-  prior = c(
-      brms::set_prior("normal(0, 3)", class = "b"),
-      brms::set_prior("normal(0, 10)", class = "Intercept"),
-      brms::set_prior("student_t(3, 0, 3)", class = "sigma")
-    )
-)
-fit_brms
-plot(fit_brms)
-brms::prior_summary(fit_brms)
-brms::pp_check(fit_brms)
-brms::marginal_effects(fit_brms)
-brms::posterior_linpred(fit_brms)
-brms::posterior_predict(fit_brms)
-brms::posterior_samples(fit_brms)
-brms::stancode(fit_brms)
-brms::standata(fit_brms)
-brms::LOO(fit_brms)
-```

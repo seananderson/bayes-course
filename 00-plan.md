@@ -11,11 +11,15 @@ output: html_document
 
 3. Learn to fit pre-packaged Bayesian regression models with brms. Become familiar with the concepts of posterior predictive checking and manipulating posterior samples to calculate posterior probabilities.
 
-4. Learn how to assess the relative contribution of priors vs. the data. Learn the difference between weakly informative and informative priors. Learn what some common choices of weakly informative priors are.
+4. Learn how to assess the relative contribution of priors vs. the data. Learn the difference between weakly informative and informative priors. Learn what some common choices of weakly informative priors are. Become familiar with prior predictive checking.
 
 5. Learn the basics of Stan model syntax and how to interact with Stan in R.
 
-6. Leave with some ideas for how to describe Bayesian models in publications and where to find more information.
+6. Put together what we've learned into a full Bayesian workflow.
+
+7. Throughout, become familiar with several useful tools around Stan and R (rstan, cmdstanr, bayesplot, loo, tidybayes).
+
+6. Leave with some ideas for where to find more information.
 
 ### Stuff I want to make sure to cover that may not already be in the material:
 
@@ -43,16 +47,23 @@ output: html_document
 
 # Plan
 
+<!-- day 1 -->
+
 1. Introduction to probability, Bayes' theorem, when to go Bayesian
    (slides and group exercises)
-  - an introduction to Bayes' theorom and Bayesian updating
+  - an introduction to Bayes' theorem and Bayesian updating
   - frequentist vs. Bayesian inference interpretation
   - went to go Bayes: advantages and disadvantages
+  - *All together exercise*: small world Bayesian updating
+  - *Small groups exercise*: manipulating and summarizing the posterior various ways
 
 2. Demystifying MCMC (group exercises and online demo)
   - run through Metropolis MCMC in R and plot the chain together
   - experiment with tuning MCMC
   - play with online demo of Hamiltonian and NUTS MCMC
+  - *Small groups exercise*: tuning MCMC, play with online MCMC samplers
+
+<!-- day 2 -->
 
 3. Introduction to applied Bayesian modeling (group walk-through of code)
   - fit a regression model with brms 
@@ -62,21 +73,48 @@ output: html_document
     with posterior protective checks
   - experiment with making probabilistic statements by manipulating the 
     posterior samples
+  - *Small groups exercise*: posterior predictive checking and probabilistic statements
+  
+4. Convergence and MCMC diagnostics
+  - understand what we're aiming for
+  - visualizations
+  - explain Rhat and the ESS metrics
+  - divergent transitions, `adapt_delta`, `max_treedepth`
+  - *Small group exercise*: diagnose (and fix) issues with a set of models
 
-4. Priors, priors, and more priors (interactive code, slides, and discussion)
+5. All about priors (interactive code, slides, and discussion)
   - experiment with an interactive simulation
   - talk about weakly informative priors, informative priors, and the 
     fallacy of uninformative priors
   - go through a series of examples and discuss reasonable prior strategies in
     small groups and together
+  - introduce prior predictive checks
+  - *Small groups exercise*: assessing prior influence and prior predictive checks
 
-5. Introduction to Stan code and rstan (group walk-through of code)
+<!-- day 3 -->
+
+6. Introduction to Stan code and rstan
+  - understand when/why you might use brms vs. custom Stan code
   - look at the syntax and the code sections of a Stan model
   - call the Stan model from R
   - extract the posterior samples and make similar plots as before
-  - fit a population-growth time series model in Stan if there is time
+  - introduce (via slides) how to do prior predictive and posterior predictive
+    checks with custom Stan models; introduce how to do LOOIC calculations with
+    custom Stan models
+  - fit an length-age growth model to groundfish data and summarize the output
+  - *Small groups exercises*: plot parameter posteriors and linear predictor,
+     change a prior, code a prior predictive check, code a posterior predictive
+     check
+  - *Small groups exercise?*: build on growth model to assess one-stock assumption
+  
+<!-- day 4 -->
+  
+7. Putting it all together: Bayesian workflow
+  - discuss why and what the suggested steps are
+  - *All together exercise*: work through an example as a group
+  - *Small groups exercise*: work through an example as an exercise
 
-6. Applied Bayesian modeling standards, words of wisdom, and resources (slides)
+8. Applied Bayesian modeling standards, words of wisdom, and resources (slides)
   - standards for iterations, warmup, chains, and assessing convergence
   - Stan warnings to watch out for
   - how to describe the models
