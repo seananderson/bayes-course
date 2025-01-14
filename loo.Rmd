@@ -189,7 +189,7 @@ loo::elpd(log_lik(fit_all))
 
 # Combining LOO with ELPD
 
-So far, we have calculated ELPD on the data predicted from a model fit to all the data. But we know this isn't overly optimistic perspective on predictive ability for new data. Instead, we can compute log LOO predictive densities.
+So far, we have calculated ELPD on the data predicted from a model fit to all the data. But we know this is an overly optimistic perspective on predictive ability for new data. Instead, we can compute log LOO predictive densities.
 
 `loo::loo()` uses fast approximate leave-one-out cross-validation to do this:
 
@@ -347,7 +347,7 @@ Leave-one-out data above the zero line are better predicted by model 3.
 
 Let's do the loo approximation by hand without the smoothing part.
 
-The basic idea is that excluding one data points is equivalent to subtracting the log density of that point data point (assuming independence) or dividing the density by the density for that one data point. We can use this property to form weights to sample from our existing posterior samples to approximate the posterior if we had dropped that data point. This is a form of "importance sampling".
+The basic idea is that excluding a data point is equivalent to subtracting the log density of that point data point (assuming independence) or dividing the total posterior density by the density for that one data point. We can use this property to form weights to sample from our existing posterior samples to approximate the posterior if we had dropped that data point. This is a form of "importance sampling".
 
 Let's work through an example with the original simulated dataset:
 
@@ -380,10 +380,11 @@ weighted_sims <- matrix(nrow = nrow(sims), ncol = ncol(sims))
 row_ids <- seq_len(nrow(weighted_sims))
 
 lpd_loo1 <- numeric(length(x))
+set.seed(123)
 for (i in 1:length(x)) {
   weights <- 1/exp(log_dens[,i])
   weights <- weights / sum(weights)
-  sampled_rows <- sample(row_ids, 2000, prob = weights, replace = TRUE)
+  sampled_rows <- sample(row_ids, 5000, prob = weights, replace = TRUE)
   lpd_loo1[i] <- log(mean(exp(log_dens[sampled_rows, i])))
 }
 loo::loo(fit_all)
