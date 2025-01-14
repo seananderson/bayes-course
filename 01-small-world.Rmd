@@ -1,6 +1,5 @@
 ---
 title: "An introduction to Bayesian updating with a grid search approach"
-author: "Sean Anderson"
 output:
   html_document:
     toc: true
@@ -36,6 +35,8 @@ theme_set(theme_light())
 # Bayesian updating of the posterior
 
 We will start by performing an experiment where we "sample" from a spinning globe and record whether a given finger lands on land `L` or water `W`.
+
+<https://earth3dmap.com/3d-globe/>
 
 The goal is to estimate what proportion of the globe is covered in water.
 
