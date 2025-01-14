@@ -4,15 +4,12 @@ title: Divergent transitions
 
 Classic dataset and model...
 
-<https://www.martinmodrak.cz/2018/02/19/taming-divergences-in-stan-models/>
+Divergent transitions are an important diagnostic with the NUTS MCMC algorithm that Stan uses. We should be weary of any divergent transitions. They can be an important diagnostic of a coding error, an inefficient implementation of a model, or a model that is too complex for a given dataset. They can result in biased parameter estimates.
 
-this version of code adapted from:
+We'll demonstrate divergent transitions using one of the most classic datasets in Bayesian statistics. The data are from Rubin (1981) <https://www.jstor.org/stable/1164617>. More on the 8-schools data: <https://statmodeling.stat.columbia.edu/2014/01/21/everything-need-know-bayesian-statistics-learned-eight-schools/>
+
+The code in this document has been adapted from:
 <https://michael-franke.github.io/Bayesian-Regression/practice-sheets/05b-divergences.html>
-
-see:
-<https://statmodeling.stat.columbia.edu/2014/01/21/everything-need-know-bayesian-statistics-learned-eight-schools/>
-
-Rubin 1981: <https://www.jstor.org/stable/1164617>
 
 ```{r}
 library(rstan)
@@ -28,7 +25,7 @@ dat <- list(
 )
 ```
 
-The idea is we can fit a heirarchical model that partially pools information across schools. The model has a 'true' latent test score change per school with some variance that results in the observed values.
+The idea is we can fit a hierarchical model that partially pools information across schools. The model has a 'true' latent test score change per school with some variance that results in the observed values.
 
 ```{stan eval=FALSE}
 data {
@@ -66,7 +63,7 @@ rstan::get_num_divergent(mod1)
 shinystan::launch_shinystan(mod1)
 ```
 
-We can visualize what's going on. The sampler isn't going all the way down the 'funnel' of a the SD of the latent values `sigma_prime` and any specific school latent `theta`:
+We can visualize what's going on. The sampler isn't going all the way down the 'funnel' of the SD of the latent values `sigma_prime` and any specific school latent `theta`:
 
 ```{r}
 bayesplot::mcmc_scatter(
@@ -105,7 +102,7 @@ model {
 }
 ```
 
-Everything not commented is the same as before. We have a Normal(0, 1) variable `eta` that we multiply by `sigma_prime`. We have the same probability model, but now the sampler is tracking `sigma_prime` and `eta`, which are uncorrelated, so it has less of a problem exploring the full posterior.
+Everything not commented is the same as before. We now have a Normal(0, 1) variable `eta` that we multiply by `sigma_prime`. We have the same probability model, but now the sampler is tracking `sigma_prime` and `eta`, which are uncorrelated, so it has less of a problem exploring the full posterior.
 
 ```{r}
 mod2 <- stan("stan/8schools_noncentered.stan", data = dat, seed = 9283)
@@ -128,6 +125,10 @@ mod3 <- stan(
   control = list(adapt_delta = 0.95)
 )
 ```
+
+This tells Stan to adjust the NUTS algorithm to take smaller steps. That slows things down but can reduce divergent transitions.
+
+Alternative solutions here would have been to tighten the priors or collect more data.
 
 ```{r}
 bayesplot::mcmc_scatter(
@@ -154,4 +155,8 @@ mean(log(p1$sigma_prime))
 mean(log(p3$sigma_prime))
 ```
 
-So, we would have lost the lower tail of the parameter if we had ignored the divergent transitions and ended up with some bias the parameter posterior.
+So, we would have lost the lower tail of the parameter if we had ignored the divergent transitions and ended up with some bias in the parameter posterior.
+
+### Other resources
+
+- <https://www.martinmodrak.cz/2018/02/19/taming-divergences-in-stan-models/>
