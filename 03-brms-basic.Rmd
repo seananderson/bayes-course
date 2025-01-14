@@ -73,7 +73,7 @@ Let's rescale (center and possibly divide by 2 SDs) the predictors. This is impo
 
 ```{r}
 d <- mutate(d,
-  ph_scaled = (ph - mean(ph)) / 2 * sd(ph)
+  ph_scaled = as.numeric(scale(ph))
 )
 ```
 
@@ -104,7 +104,7 @@ fit <- brm(
 )
 ```
 
-There are a variety of functions available to inspect our model including the usual summary function:
+There are a variety of functions available to inspect our model including the usual print or summary function:
 
 ```{r}
 summary(fit)
@@ -389,7 +389,7 @@ post <- as_tibble(as.data.frame(fit))
 post
 ```
 
-What if we wanted to know the probability that there is a negative (frowning) quadratic shape or a positive (smiling) quadratic shape to the relationship? We can get that from the ph^2 term.
+What if we wanted to know the probability that there is a negative (frowning) quadratic shape (vs. a positive (smiling) quadratic shape) to the relationship? We can get that from the ph^2 term since we centered our ph predictor before fitting.
 
 ```{r}
 ph2_samples <- post$b_ph_scaled
@@ -439,6 +439,12 @@ quantile(ratio, probs = c(0.11, 0.5, 0.89))
 mean(ratio > 1)
 ```
 
+What's the probabilty this ratio is greater than 3?
+
+```{r}
+mean(ratio > 3)
+```
+
 *If you can think it you can quantify it*! And all you have to do is manipulate the MCMC samples. Add, subtract, multiply, or divide as needed.
 
 # Model comparison
@@ -449,7 +455,7 @@ As an example, let's refit our model but also include interactions between nutri
 
 We'll use the `update()` method to refit our model without specifying all the arguments again. 
 
-```{r, results='hide', warning=FALSE}
+```{r, results='hide', warning=FALSE, results="hide"}
 fit2 <- update(fit, formula. = . ~ . +
   nutrients:ph_scaled + nutrients:I(ph_scaled^2))
 ```
@@ -465,8 +471,8 @@ pp_check(fit2, plotfun = "dens_overlay")
 Now we can compare the models with LOOIC. We will set `k_threshold = 0.7`. The `k` value is an indication of how well the approximation of leaving out a single data point is expected to be to actually refitting the model and leaving out that data point. The Stan developers recommend 0.7 as a reasonable threshold. By setting the threshold, brms will refit the model successively leaving out any data points that weren't well approximated. This is quite fast here, but could be slow for much more complicated models or models for much larger data sets. 
 
 ```{r}
-loo1 <- loo(fit, k_threshold = 0.7, moment_match = TRUE)
-loo2 <- loo(fit2, k_threshold = 0.7, moment_match = TRUE)
+loo1 <- loo(fit, moment_match = TRUE)
+loo2 <- loo(fit2, moment_match = TRUE)
 ```
 
 We could compare those values ourselves, but we can also use the `loo::compare_models()` function to compare them. Note that we also get a standard error on the comparison here, in contrast to working with something like AIC.
@@ -475,4 +481,4 @@ We could compare those values ourselves, but we can also use the `loo::compare_m
 loo_compare(loo1, loo2)
 ```
 
-So this suggests that we should favour the original model that did not have interactions between nutrients and pH.
+So this suggests the model without the interaction is preferred, but the difference is not large.
