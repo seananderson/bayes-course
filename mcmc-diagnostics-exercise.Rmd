@@ -38,6 +38,7 @@ samples <- readRDS(here::here("data/mcmc3.rds"))
 samples_matrix <- do.call(cbind, samples)
 
 bayesplot::mcmc_trace(samples)
+bayesplot::mcmc_dens_overlay(samples)
 rstan::Rhat(samples_matrix)
 rstan::ess_bulk(samples_matrix)
 rstan::ess_tail(samples_matrix)
@@ -48,6 +49,7 @@ samples <- readRDS(here::here("data/mcmc4.rds"))
 samples_matrix <- do.call(cbind, samples)
 
 bayesplot::mcmc_trace(samples)
+bayesplot::mcmc_dens_overlay(samples)
 rstan::Rhat(samples_matrix)
 rstan::ess_bulk(samples_matrix)
 rstan::ess_tail(samples_matrix)
@@ -61,6 +63,7 @@ bayesplot::mcmc_trace(samples)
 rstan::Rhat(samples_matrix)
 rstan::ess_bulk(samples_matrix)
 rstan::ess_tail(samples_matrix)
+bayesplot::mcmc_dens_overlay(samples)
 ```
 
 ```{r mcmc-chains6}
