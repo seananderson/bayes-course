@@ -55,7 +55,7 @@ output: html_document
   - frequentist vs. Bayesian inference interpretation
   - went to go Bayes: advantages and disadvantages
   - *All together exercise*: small world Bayesian updating
-  - *Small groups exercise*: manipulating and summarizing the posterior various ways
+  - manipulating and summarizing the posterior various ways
 
 2. Demystifying MCMC (group exercises and online demo)
   - run through Metropolis MCMC in R and plot the chain together
