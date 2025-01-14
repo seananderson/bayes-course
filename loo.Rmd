@@ -136,7 +136,7 @@ We can compute log predictive densities. This results in a matrix with a value f
 ll_1 <- log_lik(fit_all)
 ```
 
-Compute the average log pointwise posterior density (LPD) in a computationally stable way:
+Compute the average log pointwise posterior density (LPD) in a computationally stable way. This is also known as the log score.
 
 ```{r }
 fake$lpd_post <- matrixStats::colLogSumExps(ll_1) - log(nrow(ll_1))
@@ -155,7 +155,7 @@ for (s in 1:nrow(sims)) {
 }
 ```
 
-Now, calculate the log density for each observation and each MCMC sample:
+Now, calculate the log density for each observation and each MCMC sample. This is the log score.
 
 ```{r}
 ll_2 <- matrix(nrow = nrow(sims), ncol = n)
@@ -379,12 +379,12 @@ Now weight the MCMC samples by weights of `1/exp(log_dens)`:
 weighted_sims <- matrix(nrow = nrow(sims), ncol = ncol(sims))
 row_ids <- seq_len(nrow(weighted_sims))
 
-lpd_loo1 <- numeric(n)
-for (i in 1:n) {
+lpd_loo1 <- numeric(length(x))
+for (i in 1:length(x)) {
   weights <- 1/exp(log_dens[,i])
   weights <- weights / sum(weights)
   sampled_rows <- sample(row_ids, 2000, prob = weights, replace = TRUE)
-  lpd_loo1[i] <- log(mean(log_dens[sampled_rows, i]))
+  lpd_loo1[i] <- log(mean(exp(log_dens[sampled_rows, i])))
 }
 loo::loo(fit_all)
 sum(lpd_loo1) # about the same
