@@ -1,5 +1,9 @@
 ---
 title: Coding in Stan
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 ```{r}
@@ -7,6 +11,7 @@ library(rstan)
 library(dplyr)
 library(ggplot2)
 options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
 ```
 
 ```{r}
@@ -75,7 +80,7 @@ head(post)
 
 post <- left_join(post, d)
 ggplot(post, aes(age, .value, group = .draw)) + geom_line(alpha = 0.2) +
-  geom_point(data = d_wcvi, mapping = aes(age, length), inherit.aes = FALSE, alpha = 0.2)
+  geom_point(data = d, mapping = aes(age, length), inherit.aes = FALSE, alpha = 0.2)
 ```
 
 The parameters themselves:
@@ -96,7 +101,7 @@ loo1
 
 # Exercise
 
-Take the above model and modify it to allow for separate k, linf, and t0 by survey region (HS vs. WCVI). Share the observation error SD. Ask whether LOO ELPD favours us estimating separate regions or defining them as one stock (according this one criteria).
+Take the above model and modify it to allow for separate k, linf, and t0 by survey region (HS vs. WCVI). Share the observation error SD. Ask whether LOO ELPD favours us estimating separate regions or defining them as one stock (according to this criteria).
 
 ```{r}
 mod2 <- stan_model("vb/vb_norm_regions.stan")
@@ -132,7 +137,7 @@ ggplot(d, aes(age, med, colour = survey, fill = survey)) +
   geom_line(aes(y = e_med)) +
   geom_ribbon(aes(ymin = e_lwr, ymax = e_upr), alpha = 0.5, colour = NA) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2, colour = NA) +
-  geom_point(data = d_wcvi, mapping = aes(age, length), inherit.aes = FALSE, alpha = 0.2) +
+  geom_point(data = d, mapping = aes(age, length), inherit.aes = FALSE, alpha = 0.2) +
   ylab("Length") + xlab("Age")
 ```
 
@@ -152,6 +157,7 @@ bayesplot::ppc_dens_overlay_grouped(y, yrep2, group = d$survey)
 ```
 
 The `^` simply means the parameter must start with each of these patterns.
+<https://xkcd.com/208/>
 
 ```{r}
 sims_array2 <- as.array(fit2)[,,1:10]
