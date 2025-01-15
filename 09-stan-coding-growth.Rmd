@@ -6,7 +6,7 @@ output:
     toc_float: true
 ---
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(rstan)
 library(dplyr)
 library(ggplot2)
@@ -31,7 +31,7 @@ dat <- list(
 )
 ```
 
-```{r}
+```{r, results="hide", message=FALSE}
 mod <- stan_model("vb/vb_norm.stan")
 fit1 <- sampling(mod, data = dat, iter = 1000, chains = 4, seed = 9129)
 ```
@@ -103,22 +103,24 @@ loo1
 
 Take the above model and modify it to allow for separate k, linf, and t0 by survey region (HS vs. WCVI). Share the observation error SD. Ask whether LOO ELPD favours us estimating separate regions or defining them as one stock (according to this criteria).
 
-```{r}
-mod2 <- stan_model("vb/vb_norm_regions.stan")
+```{r, results="hide"}
 dat2 <- dat
 levels(factor(d$survey))
 unique(as.integer(factor(d$survey)))
 dat2$survey_id <- as.integer(factor(d$survey))
 dat2$N_surveys <- 2
 
+mod2 <- stan_model("vb/vb_norm_regions.stan")
 fit2 <- sampling(mod2, data = dat2, iter = 1000, chains = 4, seed = 9129)
+```
+
+```{r}
 print(fit2, pars = c("k", "linf", "t0", "sigma"))
 ```
 
 ```{r}
 sims2 <- extract(fit2)
 ```
-
 
 Plot the 80% quantile credible interval of expected values and the posterior predictive distribution:
 
@@ -203,7 +205,7 @@ What is the probability that linf is at least 5 cm greater in WCVI than in HS?
 mean(linf_diff > 5)
 ```
 
-What is the probability that linf in WCVI is within 3 cm of HS?
+What is the probability that linf in WCVI is between 3 cm greater or 3 cm less than linf in HS?
 
 ```{r}
 1 - mean(linf_diff > 3 | linf_diff < -3)

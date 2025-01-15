@@ -34,7 +34,7 @@ theme_set(theme_light())
 
 # Bayesian updating of the posterior
 
-We will start by performing an experiment where we "sample" from a spinning globe and record whether a given finger lands on land `L` or water `W`.
+We will start by performing an experiment where we "sample" from a spinning globe and record whether a given finger lands on land `0` or water `1`.
 
 <https://earth3dmap.com/3d-globe/>
 
@@ -43,8 +43,7 @@ The goal is to estimate what proportion of the globe is covered in water.
 This example has some built-in data from a previous version of that experiment.
 
 ```{r}
-dat <- c("W", "L", "W", "W", "L", "W") # data we collected
-dat <- ifelse(dat == "W", 1, 0) # 1 if water, 0 if land
+dat <- c(1, 0, 1, 1, 0, 1) # data we collected
 
 p <- seq(0, 1, length.out = 200) # a sequence of 'proportions water' to evaluate
 

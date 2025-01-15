@@ -12,8 +12,8 @@ We're going to use rstanarm instead of brms here just because rstanarm doesn't r
 
 Let's get some acronyms out of the way first:
 
-- LPD: log (pointwise) predictive density (usually on new data)
-- ELPD: expected log (pointwise) predictive density (usually on new data)
+- LPD: log (pointwise) predictive density (typically on fitted data)
+- ELPD: expected log (pointwise) predictive density (typically on left-out data)
 - LOO: leave-one-out
 - LOOIC: leave-one-out information criteria
 
@@ -21,6 +21,7 @@ Let's get some acronyms out of the way first:
 library(rstanarm)
 library(ggplot2)
 theme_set(theme_light())
+options(mc.cores = 1) # no parallel: faster for these simple regressions
 ```
 
 Let's simulate some data for a linear regression:
@@ -140,7 +141,7 @@ We can compute log predictive densities. This results in a matrix with a value f
 ll_1 <- log_lik(fit_all)
 ```
 
-Compute the average log pointwise posterior density (LPD) in a computationally stable way. This is also known as the log score.
+Compute the average log pointwise posterior density (LPD) in a computationally stable way. This is also known as the log score (although typically `*-1` these values).
 
 ```{r }
 fake$lpd_post <- matrixStats::colLogSumExps(ll_1) - log(nrow(ll_1))
@@ -193,7 +194,7 @@ loo::elpd(log_lik(fit_all))
 
 # Combining LOO with ELPD
 
-So far, we have calculated ELPD on the data predicted from a model fit to all the data. But we know this is an overly optimistic perspective on predictive ability for new data. Instead, we can compute log LOO predictive densities.
+So far, we have calculated ELPD on the data predicted from a model fit to all the data. But, we know this is an overly optimistic perspective on predictive ability for new data. Instead, we can compute log LOO predictive densities, which is typically what we mean by ELPD.
 
 `loo::loo()` uses fast approximate leave-one-out cross-validation to do this:
 
@@ -210,7 +211,7 @@ lpd_loo <- numeric(n)
 for (i in 1:n) {
   cat(i, "\n")
   this_dat <- fake[-i, ]
-  fit_minus_i <- rstanarm::stan_glm(y ~ x, data = this_dat, seed = 2141, refresh = 0)
+  fit_minus_i <- rstanarm::stan_glm(y ~ x, data = this_dat, seed = 2141, iter = 2000, chains = 4, cores = 1, refresh = 0)
   draws <- as.matrix(fit_minus_i)
   y_hat <- matrix(nrow = nrow(draws), ncol = 1)
   yhat <- numeric(nrow(draws))
@@ -306,6 +307,8 @@ round(R2loon <- 1 - var(resloon) / var(kidiq$kid_score), 2)
 ```
 
 R^2 got better! LOO-R^2 got worse.
+
+Each noise predictor is expected to add 0.5 to the in-sample ELPD and subtract 0.5 from the LOO-ELPD.
 
 ```{r}
 loo_3 <- loo(fit_3)

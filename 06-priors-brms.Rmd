@@ -17,6 +17,7 @@ library(ggplot2)
 library(dplyr)
 theme_set(theme_light())
 library(brms)
+dir.create("cache", showWarnings = FALSE)
 ```
 
 ```{r}
@@ -50,6 +51,7 @@ get_prior(mod1)
 
 ```{r, eval=FALSE}
 mod1 <- brm(y ~ x, data = fake, family = gaussian(),
+  file = "cache/priors1",
   prior = c(
     set_prior("normal(0, 1)", class = "Intercept"),
     set_prior("normal(0, 1)", class = "b"),
@@ -61,6 +63,7 @@ mod1 <- brm(y ~ x, data = fake, family = gaussian(),
 
 ```{r}
 mod2 <- brm(y ~ 0 + Intercept + x, data = fake, family = gaussian(),
+  file = "cache/priors2",
   prior = c(
     set_prior("normal(0, 1)", class = "b", coef = "Intercept"),
     set_prior("normal(0, 1)", class = "b", coef = "x"),
@@ -95,7 +98,9 @@ hist(p2$sigma, breaks = 50)
 ```
 
 ```{r}
-mod_prior_only <- brm(y ~ 0 + Intercept + x, data = fake, family = gaussian(),
+mod_prior_only <- brm(
+  y ~ 0 + Intercept + x, data = fake, family = gaussian(),
+  file = "cache/priors3",
   prior = c(
     set_prior("normal(0, 5)", class = "b", coef = "Intercept"),
     set_prior("normal(0, 1)", class = "b", coef = "x"),
@@ -130,7 +135,9 @@ ggplot(fake, aes(x, pp3)) + geom_point()
 ```
 
 ```{r}
-mod_prior_only_wide <- brm(y ~ 0 + Intercept + x, data = fake, family = gaussian(),
+mod_prior_only_wide <- brm(
+  y ~ 0 + Intercept + x, data = fake, family = gaussian(),
+  file = "cache/priors4",
   prior = c(
     set_prior("normal(0, 100)", class = "b", coef = "Intercept"),
     set_prior("normal(0, 100)", class = "b", coef = "x"),

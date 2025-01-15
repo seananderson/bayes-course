@@ -28,7 +28,7 @@ please_install <- function(pkgs, install_fun = install.packages) {
 pkgs <- c(
   "tidyverse", "rstan", "rstanarm", "brms", "rmarkdown",
   "manipulate", "shiny", "usethis", "bayesplot", "loo",
-  "devtools", "gridExtra", "patchwork", "extraDistr"
+  "devtools", "gridExtra", "patchwork", "extraDistr", "coda"
 )
 have <- rownames(installed.packages())
 needed <- setdiff(pkgs, have)
