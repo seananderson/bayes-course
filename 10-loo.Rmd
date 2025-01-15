@@ -183,7 +183,7 @@ plot(fake$lpd_post, lpd_2)
 abline(0, 1)
 ```
 
-These match. The sum of these log predictive densities are called the 'ELPD': the expected log predictive densities.
+These match. The sum of these log predictive densities are called the 'ELPD': the expected log predictive density.
 
 We can check that our hand calculation matches the calculation from the loo package:
 
@@ -195,7 +195,7 @@ loo::elpd(log_lik(fit_all))
 
 # Combining LOO with ELPD
 
-So far, we have calculated ELPD on the data predicted from a model fit to all the data. But, we know this is an overly optimistic perspective on predictive ability for new data. Instead, we can compute log LOO predictive densities, which is typically what we mean by ELPD.
+So far, we have calculated ELPD on the data predicted from a model fit to all the data. But, we know this is an overly optimistic perspective on predictive ability for new data. Instead, we can compute log LOO predictive densities, which is typically how ELPD is used.
 
 `loo::loo()` uses fast approximate leave-one-out cross-validation to do this:
 
@@ -205,7 +205,7 @@ loo_1
 fake$lpd_loo <- loo_1$pointwise[, "elpd_loo"]
 ```
 
-This approximation is equivalent (but much faster) than this:
+This approximation (demonstrated at the end) is equivalent (but much faster) than this:
 
 ```{r, results="hide"}
 lpd_loo <- numeric(n)
@@ -309,7 +309,7 @@ round(R2loon <- 1 - var(resloon) / var(kidiq$kid_score), 2)
 
 R^2 got better! LOO-R^2 got worse.
 
-Each noise predictor is expected to add 0.5 to the in-sample ELPD and subtract 0.5 from the LOO-ELPD.
+Each pure noise predictor is expected to add 0.5 to the in-sample ELPD and subtract 0.5 from the LOO-ELPD.
 
 ```{r}
 loo_3 <- loo(fit_3)
@@ -317,7 +317,7 @@ loo_3n <- loo(fit_3n)
 loo_compare(loo_3, loo_3n)
 ```
 
-ELPD favours the model without random predictors, but the difference isn't large. Presumably we'd pick the simpler model.
+LOO ELPD favours the model without random predictors, but the difference isn't large. Presumably we'd pick the simpler model.
 
 "Regression and Other Stories" p. 178 suggests a difference of > 4 if number of observations is > 100 with well-specified models is a reliable way to distinguish. Otherwise, hard to distinguish.
 
@@ -328,7 +328,7 @@ fit_1 <- stan_glm(kid_score ~ mom_hs, data = kidiq, refresh = 0)
 loo_1 <- loo(fit_1)
 ```
 
-Compare models using LOO log score (ELPD)
+Compare models using LOO log score (ELPD):
 
 ```{r }
 loo_compare(loo_3, loo_1)
