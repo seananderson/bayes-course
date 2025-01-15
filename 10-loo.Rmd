@@ -6,13 +6,14 @@ output:
     toc_float: true
 ---
 
-This example builds on content and code from the book "Regression and Other Stories" <https://avehtari.github.io/ROS-Examples/> by Gelman, Hill, and Vehtari.
+This material builds on code from the book:
 
-We're going to use rstanarm instead of brms here just because rstanarm doesn't require us to compile the model each time, so the code here will run much faster.
+Gelman, A., Hill, J., and Vehtari, A. 2021. Regression and other stories. Cambridge University Press, Cambridge. doi:10.1017/9781139161879. <https://avehtari.github.io/ROS-Examples/>
+
+We're going to use rstanarm instead of brms here just because rstanarm doesn't require us to compile the models, so the code will run much faster.
 
 Let's get some acronyms out of the way first:
 
-- LPD: log (pointwise) predictive density (typically on fitted data)
 - ELPD: expected log (pointwise) predictive density (typically on left-out data)
 - LOO: leave-one-out
 - LOOIC: leave-one-out information criteria
@@ -133,7 +134,7 @@ round(1 - var(fake$residual) / var(y), 2)
 round(1 - var(fake$looresidual) / var(y), 2)
 ```
 
-# The concept of log scores, LPD, and ELPD
+# The concept of log scores ELPD
 
 We can compute log predictive densities. This results in a matrix with a value for each MCMC sample and each data point:
 
@@ -380,7 +381,7 @@ for (s in 1:nrow(sims)) {
 }
 ```
 
-Now weight the MCMC samples by weights of `1/exp(log_dens)`:
+Now weight the MCMC samples by weights of 1 / density or equivalently, `1/exp(log_dens)`:
 
 ```{r}
 weighted_sims <- matrix(nrow = nrow(sims), ncol = ncol(sims))
@@ -398,11 +399,13 @@ loo::loo(fit_all)
 sum(lpd_loo1) # about the same
 ```
 
-The only difference with the calculations in the loo package is the package does some smoothing on the weights since they can get noisy.
+The only difference with the calculations in the loo package is the package does some smoothing on the weights since the distribution of the weights can have very heavy tails with extremely unlikely data points.
 
 # Additional resources
 
-Vehtari, A., Gelman, A., & Gabry, J. (2017). Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC. Statistics and Computing, 27(5), 1413–1432.
+Vehtari, A., Gelman, A., & Gabry, J. 2017. Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC. Statistics and Computing, 27(5), 1413–1432.
+
+Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. 2024, March 13. Pareto Smoothed Importance Sampling. arXiv. doi:10.48550/arXiv.1507.02646.
 
 <https://mc-stan.org/loo/>
 
