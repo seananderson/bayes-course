@@ -1,0 +1,376 @@
+---
+title: "Bayesian workflow"
+output: html_document
+---
+
+maybe positive depth curves for a 5 or 6 groundfish... question is if they should be grouped or not
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+theme_set(theme_light())
+library(bayesplot)
+library(brms)
+options(mc.cores = parallel::detectCores()) # parallel chains
+options(brms.file_refit = "on_change") # re-fit cached models if changes
+dir.create("cache", showWarnings = FALSE)
+```
+
+```{r}
+d <- readRDS("data/rockfish-depth.rds")
+d$logdepth <- as.numeric(scale(log(d$depth_m)))
+d$fyear <- factor(d$year)
+d$fspecies <- factor(d$species_common_name)
+d$density <- d$density_kgpm2 * 1000
+```
+
+```{r}
+ggplot(d, aes(log(depth_m), log(density_kgpm2))) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+
+ggplot(d, aes(log(depth_m), log(density_kgpm2), colour = species_common_name)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+
+ggplot(d, aes(log(depth_m), log(density_kgpm2))) +
+  geom_point() +
+  facet_wrap(~species_common_name) +
+  geom_smooth(se = FALSE)
+```
+
+Prior predictive checks
+
+We can find out what priors we need to specify with brms with `default_priors()`
+
+```{r}
+default_prior(
+  log(density) ~ 0 + Intercept + logdepth + I(logdepth^2),
+  data = d,
+  family = gaussian()
+)
+```
+
+```{r, results="hide"}
+priors1 <- brm(
+  log(density) ~ 0 + Intercept + logdepth + I(logdepth^2),
+  data = d,
+  iter = 100,
+  chains = 1,
+  family = gaussian(),
+  sample_prior = "only",
+  seed = 123,
+  file = "cache/sdm-priors1",
+  prior = c(
+    set_prior("normal(-2.82, 5)", class = "b", coef = "Intercept"),
+    set_prior("normal(0, 1)", class = "b", coef = "logdepth"),
+    set_prior("normal(0, 1)", class = "b", coef = "IlogdepthE2"),
+    set_prior("student_t(3, 0, 3)", class = "sigma")
+  )
+)
+
+prior_predictive <- brms::posterior_predict(priors1)
+prior_predictive_push <- brms::posterior_epred(priors1)
+
+set.seed(1)
+i <- sample(1:nrow(prior_predictive), 4)
+
+d$yrep_prior1 <- prior_predictive[i[1], ]
+d$yrep_prior2 <- prior_predictive[i[2], ]
+d$yrep_prior3 <- prior_predictive[i[3], ]
+d$yrep_prior4 <- prior_predictive[i[4], ]
+d$yrep_pushforward_prior1 <- prior_predictive_push[i[1], ]
+d$yrep_pushforward_prior2 <- prior_predictive_push[i[2], ]
+d$yrep_pushforward_prior4 <- prior_predictive_push[i[4], ]
+d$yrep_pushforward_prior3 <- prior_predictive_push[i[3], ]
+
+ggplot(d, aes(logdepth, density)) +
+  geom_point() +
+  ggtitle("Observed data")
+
+g1 <- ggplot(d, aes(logdepth, exp(yrep_prior1))) +
+  geom_point()
+g2 <- ggplot(d, aes(logdepth, exp(yrep_prior2))) +
+  geom_point()
+g3 <- ggplot(d, aes(logdepth, exp(yrep_prior3))) +
+  geom_point()
+g4 <- ggplot(d, aes(logdepth, exp(yrep_prior4))) +
+  geom_point()
+patchwork::wrap_plots(g1, g2, g3, g4)
+
+g1 <- ggplot(d, aes(logdepth, exp(yrep_pushforward_prior1))) +
+  geom_point()
+g2 <- ggplot(d, aes(logdepth, exp(yrep_pushforward_prior2))) +
+  geom_point()
+g3 <- ggplot(d, aes(logdepth, exp(yrep_pushforward_prior3))) +
+  geom_point()
+g4 <- ggplot(d, aes(logdepth, exp(yrep_pushforward_prior4))) +
+  geom_point()
+patchwork::wrap_plots(g1, g2, g3, g4)
+```
+
+```{r}
+red <- filter(d, fspecies == "redbanded rockfish")
+obs <- mutate(red, .prediction = log(density), .draw = 0)
+
+pp <- tidybayes::predicted_draws(priors1, newdata = red, ndraws = 8)
+pp <- bind_rows(pp, obs) |> 
+  mutate(type = ifelse(.draw != 0, "Simulated", "Observed"))
+
+ggplot(pp, aes(depth_m, .prediction, colour = type)) + geom_point() +
+  facet_wrap(~.draw) +
+  scale_x_log10() + 
+  ggtitle("Prior predictive simulation")
+```
+
+```{r}
+pp <- tidybayes::epred_draws(priors1, newdata = red, ndraws = 9)
+ggplot(pp, aes(depth_m, .epred)) + geom_point() +
+  facet_wrap(~.draw) +
+  scale_x_log10() + 
+  ggtitle("Prior pushforward simulation")
+```
+
+```{r, results="hide", warning=FALSE}
+priors2 <- brm(
+  log(density) ~ 0 + Intercept + logdepth + I(logdepth^2),
+  data = d,
+  iter = 100,
+  chains = 1,
+  family = gaussian(),
+  sample_prior = "only",
+  seed = 123,
+  file = "cache/sdm-priors-wide",
+  prior = c(
+    set_prior("normal(0, 100)", class = "b", coef = "Intercept"),
+    set_prior("normal(0, 100)", class = "b", coef = "logdepth"),
+    set_prior("normal(0, 100)", class = "b", coef = "IlogdepthE2"),
+    set_prior("student_t(3, 0, 100)", class = "sigma")
+  )
+)
+
+pp <- tidybayes::predicted_draws(priors2, newdata = red, ndraws = 8)
+pp <- bind_rows(pp, obs) |> 
+  mutate(type = ifelse(.draw != 0, "Simulated", "Observed"))
+
+ggplot(pp, aes(depth_m, .prediction, colour = type)) + geom_point() +
+  facet_wrap(~.draw) +
+  scale_x_log10() + 
+  ggtitle("Redbanded Rockfish: wide priors")
+```
+
+```{r, results="hide"}
+fit1 <- brm(
+  log(density) ~ 0 + Intercept + logdepth + I(logdepth^2),
+  data = d,
+  iter = 1000,
+  chains = 4,
+  family = gaussian(),
+  seed = 726328,
+  file = "cache/sdm-fit1",
+  prior = c(
+    set_prior("normal(0, 10)", class = "b", coef = "Intercept"),
+    set_prior("normal(0, 1)", class = "b", coef = "logdepth"),
+    set_prior("normal(0, 1)", class = "b", coef = "IlogdepthE2"),
+    set_prior("student_t(3, 0, 3)", class = "sigma")
+  )
+)
+
+default_prior(
+  log(density) ~ 0 + Intercept + logdepth + I(logdepth^2) +
+    (logdepth + I(logdepth^2) | fspecies),
+  data = d
+)
+
+fit2 <- brm(
+  log(density) ~ 0 + Intercept + logdepth + I(logdepth^2) +
+    (logdepth + I(logdepth^2) | fspecies),
+  data = d,
+  iter = 1000,
+  chains = 4,
+  family = gaussian(),
+  seed = 72632,
+  control = list(adapt_delta = 0.9),
+  file = "cache/sdm-fit2",
+  prior = c(
+    set_prior("normal(0, 10)", class = "b", coef = "Intercept"),
+    set_prior("normal(0, 1)", class = "b", coef = "logdepth"),
+    set_prior("normal(0, 1)", class = "b", coef = "IlogdepthE2"),
+    set_prior("student_t(3, 0, 3)", class = "sigma"),
+    set_prior("lkj_corr_cholesky(1)", class = "L"),
+    set_prior("student_t(3, 0, 3)", class = "sd")
+  )
+)
+
+fit3 <- brm(
+  bf(
+    log(density) ~ 0 + Intercept + logdepth + I(logdepth^2) +
+      (logdepth + I(logdepth^2) | fspecies),
+    sigma ~ fspecies
+  ),
+  data = d,
+  iter = 1000,
+  chains = 4,
+  family = gaussian(),
+  seed = 726328,
+  control = list(adapt_delta = 0.95),
+  file = "cache/sdm-fit3",
+  prior = c(
+    set_prior("normal(0, 10)", class = "b", coef = "Intercept"),
+    set_prior("normal(0, 1)", class = "b", coef = "logdepth"),
+    set_prior("normal(0, 1)", class = "b", coef = "IlogdepthE2"),
+    set_prior("student_t(3, 0, 3)", class = "Intercept", dpar = "sigma"),
+    set_prior("normal(0, 1)", class = "b", dpar = "sigma"),
+    set_prior("lkj_corr_cholesky(1)", class = "L"),
+    set_prior("student_t(3, 0, 3)", class = "sd")
+  )
+)
+```
+
+```{r}
+fit1
+fit2
+fit3
+```
+
+```{r}
+bayesplot::mcmc_trace(fit1, regex_pars = "^b_")
+bayesplot::mcmc_trace(fit3, regex_pars = "^b_")
+```
+
+```{r}
+bayesplot::mcmc_dens_chains(fit1, regex_pars = "^b_")
+bayesplot::mcmc_areas(fit3, regex_pars = c("^b_", "sigma"))
+bayesplot::mcmc_intervals(fit3, regex_pars = c("^r_"))
+```
+
+```{r}
+bayesplot::mcmc_intervals_data(fit3, regex_pars = c("^b_")) |> 
+  head()
+```
+
+```{r}
+y <- log(d$density)
+yrep1 <- posterior_predict(fit1, ndraws = 20)
+bayesplot::ppc_dens_overlay(y, yrep1)
+bayesplot::ppc_dens_overlay_grouped(y, yrep1, group = d$fspecies)
+```
+
+```{r}
+yrep2 <- posterior_predict(fit2, ndraws = 20)
+bayesplot::ppc_dens_overlay_grouped(y, yrep2, group = d$fspecies)
+```
+
+```{r}
+yrep3 <- posterior_predict(fit3, ndraws = 20)
+bayesplot::ppc_dens_overlay_grouped(y, yrep3, group = d$fspecies)
+```
+
+```{r}
+red <- filter(d, fspecies == "redbanded rockfish")
+obs <- mutate(red, .prediction = log(density), .draw = 0)
+
+pp1 <- tidybayes::predicted_draws(fit1, newdata = red, ndraws = 8)
+pp1 <- bind_rows(pp1, obs) |> 
+  mutate(type = ifelse(.draw != 0, "Simulated", "Observed"))
+
+pp3 <- tidybayes::predicted_draws(fit3, newdata = red, ndraws = 8)
+pp3 <- bind_rows(pp3, obs) |> 
+  mutate(type = ifelse(.draw != 0, "Simulated", "Observed"))
+
+ggplot(pp1, aes(depth_m, .prediction, colour = type)) + geom_point() +
+  facet_wrap(~.draw) +
+  scale_x_log10() + 
+  ggtitle("Redbanded Rockfish: shared quadratic")
+
+ggplot(pp3, aes(depth_m, .prediction, colour = type)) + geom_point() +
+  facet_wrap(~.draw) +
+  scale_x_log10() +
+  ggtitle("Redbanded Rockfish: species-specific quadratic + error")
+```
+
+```{r}
+yrep1 <- posterior_predict(fit1)
+yrep2 <- posterior_predict(fit2)
+yrep3 <- posterior_predict(fit3)
+
+ppc_stat_grouped(y, yrep1, stat = "median", group = d$fspecies)
+ppc_stat_grouped(y, yrep2, stat = "median", group = d$fspecies)
+ppc_stat_grouped(y, yrep3, stat = "median", group = d$fspecies)
+
+ppc_stat_grouped(y, yrep1, stat = "sd", group = d$fspecies)
+ppc_stat_grouped(y, yrep2, stat = "sd", group = d$fspecies)
+ppc_stat_grouped(y, yrep3, stat = "sd", group = d$fspecies)
+
+iqr <- function(x) {
+  q75 <- quantile(x, 0.75)
+  q25 <- quantile(x, 0.25)
+  q75 - q25
+}
+ppc_stat_grouped(y, yrep1, stat = "iqr", group = d$fspecies)
+ppc_stat_grouped(y, yrep2, stat = "iqr", group = d$fspecies)
+ppc_stat_grouped(y, yrep3, stat = "iqr", group = d$fspecies)
+
+# what about by year?
+ppc_stat_grouped(y, yrep1, stat = "median", group = d$year)
+```
+
+```{r}
+nd <- expand.grid(
+  logdepth = seq(min(d$logdepth), max(d$logdepth), length.out = 100),
+  fspecies = unique(d$fspecies)
+)
+
+out <- tidybayes::add_epred_draws(newdata = nd, object = fit3, ndraws = 50)
+ggplot(out, aes(logdepth, .epred, group = .draw)) +
+  geom_line(alpha = 0.2) +
+  facet_wrap(~fspecies, scales = "free_y")
+```
+
+```{r}
+lpred <- brms::posterior_epred(fit3, newdata = nd)
+nd$med <- apply(lpred, 2, median)
+nd$lwr <- apply(lpred, 2, quantile, probs = 0.9)
+nd$upr <- apply(lpred, 2, quantile, probs = 0.1)
+ggplot(nd, aes(logdepth, exp(med), colour = fspecies, fill = fspecies)) +
+  geom_ribbon(aes(ymin = exp(lwr), ymax = exp(upr)), alpha = 0.2, colour = NA) +
+  geom_line()
+```
+
+```{r}
+ppred <- brms::posterior_predict(fit3, newdata = nd)
+nd$pp_med <- apply(ppred, 2, median)
+nd$pp_lwr <- apply(ppred, 2, quantile, probs = 0.9)
+nd$pp_upr <- apply(ppred, 2, quantile, probs = 0.1)
+ggplot(nd, aes(logdepth, exp(pp_med), colour = fspecies, fill = fspecies)) +
+  geom_ribbon(aes(ymin = exp(pp_lwr), ymax = exp(pp_upr)), alpha = 0.2, colour = NA) +
+  geom_line()
+```
+
+```{r}
+loo1 <- loo(fit1)
+loo2 <- loo(fit2)
+loo3 <- loo(fit3)
+loo_compare(loo1, loo2, loo3)
+```
+
+```{r}
+elpdi1 <- loo1$pointwise[, "elpd_loo"]
+elpdi2 <- loo2$pointwise[, "elpd_loo"]
+elpdi3 <- loo3$pointwise[, "elpd_loo"]
+```
+
+```{r}
+d$diff32 <- elpdi3 - elpdi2
+d$diff21 <- elpdi2 - elpdi1
+
+ggplot(d, aes(logdepth, diff21, colour = fspecies, fill = fspecies)) +
+  geom_point() +
+  facet_wrap(~fspecies) +
+  geom_hline(yintercept = 0, lty = 2)
+
+ggplot(d, aes(logdepth, diff32, colour = fspecies, fill = fspecies)) +
+  geom_point() +
+  facet_wrap(~fspecies) +
+  geom_hline(yintercept = 0, lty = 2)
+```

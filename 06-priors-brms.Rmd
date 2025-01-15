@@ -1,0 +1,152 @@
+---
+title: Priors
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+how to find what priors are needed in brms and defaults
+how to specify specific parameters
+see influence of priors
+try a prior predictive check (pushforward and new obs)
+understand brms's treatment of intercepts
+
+```{r}
+library(ggplot2)
+library(dplyr)
+theme_set(theme_light())
+library(brms)
+```
+
+```{r}
+x <- 1:20
+n <- length(x)
+a <- 0.2
+b <- 0.3
+sigma <- 1
+set.seed(2141)
+y <- a + b * x + sigma * rnorm(n)
+fake <- data.frame(x, y)
+```
+
+```{r}
+ggplot(fake, aes(x, y)) + geom_point()
+```
+
+```{r}
+brms::default_prior(
+  y ~ x, data = fake
+)
+```
+
+```{r}
+mod1 <- brm(y ~ x, data = fake, family = gaussian())
+```
+
+```{r}
+get_prior(mod1)
+```
+
+```{r, eval=FALSE}
+mod1 <- brm(y ~ x, data = fake, family = gaussian(),
+  prior = c(
+    set_prior("normal(0, 1)", class = "Intercept"),
+    set_prior("normal(0, 1)", class = "b"),
+    set_prior("student_t(3, 0, 3)", class = "sigma")
+  ),
+  sample_prior = "yes"
+)
+```
+
+```{r}
+mod2 <- brm(y ~ 0 + Intercept + x, data = fake, family = gaussian(),
+  prior = c(
+    set_prior("normal(0, 1)", class = "b", coef = "Intercept"),
+    set_prior("normal(0, 1)", class = "b", coef = "x"),
+    set_prior("student_t(3, 0, 3)", class = "sigma")
+  ),
+  sample_prior = "yes"
+)
+```
+
+```{r}
+stancode(mod1)
+stancode(mod2)
+```
+
+```{r}
+sims1 <- as_draws_df(mod1)
+mean(sims1$b_Intercept)
+mean(sims1$Intercept)
+mean(fake$y)
+```
+
+```{r}
+sims2 <- as_draws_df(mod2)
+mean(sims2$b_Intercept)
+mean(fake$y)
+```
+
+```{r}
+p2 <- brms::prior_draws(mod2) # sample_prior = "yes"
+hist(p2$b_x, breaks = 50)
+hist(p2$sigma, breaks = 50)
+```
+
+```{r}
+mod_prior_only <- brm(y ~ 0 + Intercept + x, data = fake, family = gaussian(),
+  prior = c(
+    set_prior("normal(0, 5)", class = "b", coef = "Intercept"),
+    set_prior("normal(0, 1)", class = "b", coef = "x"),
+    set_prior("student_t(3, 0, 3)", class = "sigma")
+  ),
+  sample_prior = "only", #<
+  seed = 2028, iter = 100, chains = 1
+)
+```
+
+```{r}
+prior_pushforward <- brms::posterior_epred(mod_prior_only)
+prior_predictive <- brms::posterior_predict(mod_prior_only)
+```
+
+```{r}
+fake$pf1 <- prior_pushforward[1,]
+fake$pf2 <- prior_pushforward[2,]
+fake$pf3 <- prior_pushforward[3,]
+ggplot(fake, aes(x, pf1)) + geom_point()
+ggplot(fake, aes(x, pf2)) + geom_point()
+ggplot(fake, aes(x, pf3)) + geom_point()
+```
+
+```{r}
+fake$pp1 <- prior_predictive[1,]
+fake$pp2 <- prior_predictive[2,]
+fake$pp3 <- prior_predictive[3,]
+ggplot(fake, aes(x, pp1)) + geom_point()
+ggplot(fake, aes(x, pp2)) + geom_point()
+ggplot(fake, aes(x, pp3)) + geom_point()
+```
+
+```{r}
+mod_prior_only_wide <- brm(y ~ 0 + Intercept + x, data = fake, family = gaussian(),
+  prior = c(
+    set_prior("normal(0, 100)", class = "b", coef = "Intercept"),
+    set_prior("normal(0, 100)", class = "b", coef = "x"),
+    set_prior("student_t(3, 0, 100)", class = "sigma")
+  ),
+  sample_prior = "only",
+  seed = 2028, iter = 100, chains = 1
+)
+```
+
+```{r}
+prior_predictive <- brms::posterior_predict(mod_prior_only_wide)
+fake$pp1 <- prior_predictive[1,]
+fake$pp2 <- prior_predictive[18,]
+fake$pp3 <- prior_predictive[42,]
+ggplot(fake, aes(x, pp1)) + geom_point()
+ggplot(fake, aes(x, pp2)) + geom_point()
+ggplot(fake, aes(x, pp3)) + geom_point()
+```

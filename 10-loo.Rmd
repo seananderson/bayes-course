@@ -1,0 +1,406 @@
+---
+title: Leave-one-out cross validation, log scores, and ELPD
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+This example builds on content and code from the book "Regression and Other Stories" <https://avehtari.github.io/ROS-Examples/> by Gelman, Hill, and Vehtari.
+
+We're going to use rstanarm instead of brms here just because rstanarm doesn't require us to compile the model each time, so the code here will run much faster.
+
+Let's get some acronyms out of the way first:
+
+- LPD: log (pointwise) predictive density (usually on new data)
+- ELPD: expected log (pointwise) predictive density (usually on new data)
+- LOO: leave-one-out
+- LOOIC: leave-one-out information criteria
+
+```{r, message=FALSE, warning=FALSE}
+library(rstanarm)
+library(ggplot2)
+theme_set(theme_light())
+```
+
+Let's simulate some data for a linear regression:
+
+```{r }
+x <- 1:20
+n <- length(x)
+a <- 0.2
+b <- 0.3
+sigma <- 1
+set.seed(2141)
+y <- a + b * x + sigma * rnorm(n)
+fake <- data.frame(x, y)
+```
+
+Let's fit a linear model. `rstanarm::stan_glm()` here is equivalent to `brms::brm()`
+
+```{r results='hide'}
+fit_all <- stan_glm(y ~ x, data = fake, seed = 2141, chains = 10, refresh = 0)
+```
+
+# The concept of leave-one-out prediction (LOO)
+
+Now, let's fit a linear model without the 18th observation:
+
+```{r }
+fit_minus_18 <- stan_glm(y ~ x, data = fake[-18, ], seed = 2141, refresh = 0)
+```
+
+Extract posterior draws:
+
+```{r }
+sims <- as.matrix(fit_all)
+sims_minus_18 <- as.matrix(fit_minus_18)
+```
+
+We can compute the posterior predictive distribution given x=18:
+
+```{r }
+condpred <- data.frame(y = seq(0, 9, length.out = 100))
+condpred$x <- sapply(condpred$y, \(y)
+mean(dnorm(y, sims[, 1] + sims[, 2] * x[18], sims[, 3]) * 6 + 18))
+# the * 6 + 18 here is just for plotting purposes below
+```
+
+Compute LOO (leave-one-out) posterior predictive distribution given x=18:
+
+```{r }
+condpredloo <- data.frame(y = seq(0, 9, length.out = 100))
+condpredloo$x <- sapply(condpredloo$y, \(y)
+mean(dnorm(y, sims_minus_18[, 1] + sims_minus_18[, 2] * x[18], sims_minus_18[, 3]) * 6 + 18))
+```
+
+Create a plot with the posterior mean and posterior predictive distribution:
+
+```{r }
+ggplot(fake, aes(x = x, y = y)) +
+  geom_point(color = "white", size = 3) +
+  geom_point(color = "black", size = 2) +
+  geom_abline(
+    intercept = mean(sims[, 1]),
+    slope = mean(sims[, 2]),
+    color = "black"
+  ) +
+  geom_path(data = condpred, aes(x = x, y = y), color = "black") +
+  geom_vline(xintercept = 18, linetype = 3, color = "grey") +
+  geom_point(data = fake[18, ], color = "grey50", size = 5, shape = 1) +
+  geom_abline(
+    intercept = mean(sims_minus_18[, 1]),
+    slope = mean(sims_minus_18[, 2]),
+    color = "grey50",
+    linetype = 2
+  ) +
+  geom_path(data = condpredloo, aes(x = x, y = y), color = "grey50", linetype = 2)
+```
+
+Note how dropping data point 18 shifts the posterior predictive distribution for the left-out point.
+
+Now, let's compute posterior and LOO residuals. `loo_predict()` computes the mean of the LOO predictive distribution:
+
+```{r, message=FALSE}
+fake$residual <- fake$y - fit_all$fitted.values
+fake$looresidual <- fake$y - loo_predict(fit_all)$value
+```
+
+Plot posterior and LOO residuals:
+
+```{r }
+ggplot(fake, aes(x = x, y = residual)) +
+  geom_point(color = "black", size = 2, shape = 16) +
+  geom_point(aes(y = looresidual), color = "grey50", size = 2, shape = 1) +
+  geom_segment(aes(xend = x, y = residual, yend = looresidual)) +
+  geom_hline(yintercept = 0, linetype = 2)
+```
+
+Note how the LOO residuals are all larger in size than the regular residuals. The model is pulled slightly towards each data point if it's included.
+
+We can also see this by looking at the standard deviations of posterior and LOO residuals:
+
+```{r }
+round(sd(fake$residual), 2)
+round(sd(fake$looresidual), 2)
+```
+
+Variance of residuals is connected to R^2, which can be defined as 1-var(res)/var(y):
+
+```{r }
+round(1 - var(fake$residual) / var(y), 2)
+round(1 - var(fake$looresidual) / var(y), 2)
+```
+
+# The concept of log scores, LPD, and ELPD
+
+We can compute log predictive densities. This results in a matrix with a value for each MCMC sample and each data point:
+
+```{r }
+ll_1 <- log_lik(fit_all)
+```
+
+Compute the average log pointwise posterior density (LPD) in a computationally stable way. This is also known as the log score.
+
+```{r }
+fake$lpd_post <- matrixStats::colLogSumExps(ll_1) - log(nrow(ll_1))
+```
+
+Let's do that by hand in R to make sure we know what just went on.
+
+Calculate the expectation for each observation for each MCMC sample:
+
+```{r}
+y_hat <- matrix(nrow = nrow(sims), ncol = n)
+for (s in 1:nrow(sims)) {
+  for (i in 1:n) {
+    y_hat[s, i] <- sims[s, 1] + sims[s, 2] * x[i]
+  }
+}
+```
+
+Now, calculate the log density for each observation and each MCMC sample. This is the log score.
+
+```{r}
+ll_2 <- matrix(nrow = nrow(sims), ncol = n)
+for (s in 1:nrow(sims)) {
+  for (i in 1:n) {
+    ll_2[s, i] <- dnorm(y[i], mean = y_hat[s, i], sd = sims[s, 3], log = TRUE)
+  }
+}
+```
+
+Now, take the average density for each data point across MCMC samples:
+
+Note we're averaging over the likelihood, *not* the *log* likelihood.
+
+```{r}
+lpd_2 <- log(apply(exp(ll_2), 2, mean)) # computationally dangerous!
+# lpd_2 <- matrixStats::colLogSumExps(ll_2) - log(nrow(ll_2)) # safer
+plot(fake$lpd_post, lpd_2)
+abline(0, 1)
+```
+
+These match. The sum of these log predictive densities are called the 'ELPD': the expected log predictive densities.
+
+We can check that our hand calculation matches the calculation from the loo package:
+
+```{r}
+elpd_2 <- sum(lpd_2)
+elpd_2
+loo::elpd(log_lik(fit_all))
+```
+
+# Combining LOO with ELPD
+
+So far, we have calculated ELPD on the data predicted from a model fit to all the data. But we know this is an overly optimistic perspective on predictive ability for new data. Instead, we can compute log LOO predictive densities.
+
+`loo::loo()` uses fast approximate leave-one-out cross-validation to do this:
+
+```{r }
+loo_1 <- loo(fit_all)
+loo_1
+fake$lpd_loo <- loo_1$pointwise[, "elpd_loo"]
+```
+
+This approximation is equivalent (but much faster) than this:
+
+```{r, results="hide"}
+lpd_loo <- numeric(n)
+for (i in 1:n) {
+  cat(i, "\n")
+  this_dat <- fake[-i, ]
+  fit_minus_i <- rstanarm::stan_glm(y ~ x, data = this_dat, seed = 2141, refresh = 0)
+  draws <- as.matrix(fit_minus_i)
+  y_hat <- matrix(nrow = nrow(draws), ncol = 1)
+  yhat <- numeric(nrow(draws))
+  ll <- numeric(nrow(draws))
+  for (s in 1:nrow(draws)) {
+    y_hat[s] <- draws[s, 1] + draws[s, 2] * x[i]
+    ll[s] <- dnorm(y[i], mean = y_hat[s], sd = draws[s, 3], log = TRUE)
+  }
+  lpd_loo[i] <- log(mean(exp(ll))) # computationally dangerous
+  # lpd_loo[i] <- matrixStats::logSumExp(ll) - log(length(ll)) # safer
+}
+```
+
+```{r}
+sum(lpd_loo)
+sum(fake$lpd_loo)
+```
+
+We can compare the ELPD vs. the LOO ELPD values:
+
+```{r }
+ggplot(fake, aes(x = x, y = lpd_post)) +
+  geom_point(color = "black", size = 2, shape = 16) +
+  geom_point(aes(y = lpd_loo), color = "grey50", size = 2, shape = 1) +
+  geom_segment(aes(xend = x, y = lpd_post, yend = lpd_loo)) +
+  ylab("log predictive density")
+```
+
+# LOOIC
+
+LOOIC is defined as `-2 * elpd_loo`, i.e., converted to the 'deviance' scale as in AIC.
+
+```{r}
+-2 * sum(lpd_loo)
+loo::loo(fit_all)
+```
+
+There's no reason we have to use that. We can also just work with ELPD. Note that more positive ELPD is 'better'.
+
+# Model comparison with LOO ELPD
+
+We will work with a regression on a dataset of child IQ sores, mom IQ scores, and other covariates such as whether the mom finished highschool. It's from the Regression and Other Stories book and originally from the National Longitudinal Survey of Youth.
+
+```{r }
+kidiq <- readRDS("data/kidiq.rds")
+```
+
+Linear regression with mom highschool and IQ as predictors of child IQ:
+
+```{r }
+fit_3 <- stan_glm(kid_score ~ mom_hs + mom_iq,
+  data = kidiq,
+  seed = 19203, refresh = 0
+)
+fit_3
+```
+
+Compute R^2 and LOO-R^2 manually:
+
+```{r, message=FALSE}
+respost <- kidiq$kid_score - fit_3$fitted.values
+resloo <- kidiq$kid_score - loo_predict(fit_3)$value
+round(R2 <- 1 - var(respost) / var(kidiq$kid_score), 2)
+round(R2loo <- 1 - var(resloo) / var(kidiq$kid_score), 2)
+```
+
+Add five pure noise predictors to the data:
+
+```{r }
+set.seed(1)
+n <- nrow(kidiq)
+kidiqr <- kidiq
+kidiqr$noise <- array(rnorm(5 * n), c(n, 5))
+```
+
+Linear regression with additional noise predictors:
+
+```{r }
+fit_3n <- stan_glm(kid_score ~ mom_hs + mom_iq + noise,
+  data = kidiqr,
+  seed = 19203, refresh = 0
+)
+fit_3n
+```
+
+Compute R^2 and LOO-R^2 manually:
+
+```{r, message=FALSE}
+respostn <- kidiq$kid_score - fit_3n$fitted
+resloon <- kidiq$kid_score - loo_predict(fit_3n)$value
+round(R2n <- 1 - var(respostn) / var(kidiq$kid_score), 2)
+round(R2loon <- 1 - var(resloon) / var(kidiq$kid_score), 2)
+```
+
+R^2 got better! LOO-R^2 got worse.
+
+```{r}
+loo_3 <- loo(fit_3)
+loo_3n <- loo(fit_3n)
+loo_compare(loo_3, loo_3n)
+```
+
+ELPD favours the model without random predictors, but the difference isn't large. Presumably we'd pick the simpler model.
+
+"Regression and Other Stories" p. 178 suggests a difference of > 4 if number of observations is > 100 with well-specified models is a reliable way to distinguish. Otherwise, hard to distinguish.
+
+Let's try a model using only the maternal high school indicator:
+
+```{r }
+fit_1 <- stan_glm(kid_score ~ mom_hs, data = kidiq, refresh = 0)
+loo_1 <- loo(fit_1)
+```
+
+Compare models using LOO log score (ELPD)
+
+```{r }
+loo_compare(loo_3, loo_1)
+```
+
+We can also compare how individual data points are predicted:
+
+```{r}
+elpdi1 <- loo_1$pointwise[, "elpd_loo"]
+elpdi3 <- loo_3$pointwise[, "elpd_loo"]
+
+kidiq$diff31 <- elpdi3 - elpdi1
+kidiq$i <- 1:nrow(kidiq)
+
+ggplot(kidiq, aes(i, diff31)) +
+  geom_point() +
+  geom_hline(yintercept = 0, lty = 2) +
+  ylab("ELPD mod3 - ELPD mod 1\npositive favours mod3")
+```
+
+Leave-one-out data above the zero line are better predicted by model 3.
+
+# Understanding the LOO ELPD approximation
+
+Let's do the loo approximation by hand without the smoothing part.
+
+The basic idea is that excluding a data point is equivalent to subtracting the log density of that point data point (assuming independence) or dividing the total posterior density by the density for that one data point. We can use this property to form weights to sample from our existing posterior samples to approximate the posterior if we had dropped that data point. This is a form of "importance sampling".
+
+Let's work through an example with the original simulated dataset:
+
+We previously did this to come up with our expectations for each data point:
+
+```{r}
+y_hat <- matrix(nrow = nrow(sims), ncol = n)
+for (s in 1:nrow(sims)) {
+  for (i in 1:n) {
+    y_hat[s, i] <- sims[s, 1] + sims[s, 2] * x[i]
+  }
+}
+```
+
+And we calculated the log density for each observation and each MCMC sample:
+
+```{r}
+log_dens <- matrix(nrow = nrow(sims), ncol = n)
+for (s in 1:nrow(sims)) {
+  for (i in 1:n) {
+    log_dens[s, i] <- dnorm(y[i], mean = y_hat[s, i], sd = sims[s, 3], log = TRUE)
+  }
+}
+```
+
+Now weight the MCMC samples by weights of `1/exp(log_dens)`:
+
+```{r}
+weighted_sims <- matrix(nrow = nrow(sims), ncol = ncol(sims))
+row_ids <- seq_len(nrow(weighted_sims))
+
+lpd_loo1 <- numeric(length(x))
+set.seed(123)
+for (i in 1:length(x)) {
+  weights <- 1/exp(log_dens[,i])
+  weights <- weights / sum(weights)
+  sampled_rows <- sample(row_ids, 5000, prob = weights, replace = TRUE)
+  lpd_loo1[i] <- log(mean(exp(log_dens[sampled_rows, i])))
+}
+loo::loo(fit_all)
+sum(lpd_loo1) # about the same
+```
+
+The only difference with the calculations in the loo package is the package does some smoothing on the weights since they can get noisy.
+
+# Additional resources
+
+Vehtari, A., Gelman, A., & Gabry, J. (2017). Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC. Statistics and Computing, 27(5), 1413–1432.
+
+<https://mc-stan.org/loo/>
+
+<https://mc-stan.org/loo/reference/loo-glossary.html>
