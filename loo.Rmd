@@ -1,5 +1,9 @@
 ---
 title: Leave-one-out cross validation, log scores, and ELPD
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 This example builds on content and code from the book "Regression and Other Stories" <https://avehtari.github.io/ROS-Examples/> by Gelman, Hill, and Vehtari.
@@ -248,7 +252,7 @@ There's no reason we have to use that. We can also just work with ELPD. Note tha
 
 # Model comparison with LOO ELPD
 
-We work with a regression on a dataset of child IQ sores, mom IQ scores, and other covariates such as whether the mom finished highschool. It's from the Regression and Other Stories book and originally from the National Longitudinal Survey of Youth.
+We will work with a regression on a dataset of child IQ sores, mom IQ scores, and other covariates such as whether the mom finished highschool. It's from the Regression and Other Stories book and originally from the National Longitudinal Survey of Youth.
 
 ```{r }
 kidiq <- readRDS("data/kidiq.rds")
