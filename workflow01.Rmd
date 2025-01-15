@@ -327,16 +327,10 @@ ggplot(nd, aes(logdepth, exp(pp_med), colour = fspecies, fill = fspecies)) +
 ```
 
 ```{r}
-loo1 <- loo(fit1, save_psis = TRUE)
-loo2 <- loo(fit2, save_psis = TRUE)
-loo3 <- loo(fit3, save_psis = TRUE)
+loo1 <- loo(fit1)
+loo2 <- loo(fit2)
+loo3 <- loo(fit3)
 loo_compare(loo1, loo2, loo3)
-```
-
-```{r}
-ppc_loo_pit_overlay(y, yrep1, lw = weights(loo1$psis_object))
-ppc_loo_pit_overlay(y, yrep2, lw = weights(loo2$psis_object))
-ppc_loo_pit_overlay(y, yrep3, lw = weights(loo3$psis_object))
 ```
 
 ```{r}
