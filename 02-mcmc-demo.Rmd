@@ -97,7 +97,7 @@ i <- i + 1 # update counter for next time
 
 You now have an MCMC chain! The distribution of those values (if you take enough of them) will reflect the distribution of the parameter(s).
 
-```{r}
+```{r, eval=FALSE}
 abline(h = mu, lty = 2) # our known true value
 ```
 
