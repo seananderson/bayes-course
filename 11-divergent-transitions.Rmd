@@ -11,6 +11,7 @@ The code in this document has been adapted from:
 
 ```{r, message=FALSE, warning=FALSE}
 library(rstan)
+rstan_options(auto_write = TRUE)
 ```
 
 This dataset represents a test of a coaching program on SAT scores across 8 schools. `y` is the average improvement (or not) test score for a given school and `sigma` is the standard error on that average improvement. 

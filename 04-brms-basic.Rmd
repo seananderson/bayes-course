@@ -1,5 +1,5 @@
 ---
-title: "An introduction to applied Bayesian regression using rstanarm"
+title: "An introduction to applied Bayesian regression using brms"
 author: "Sean Anderson"
 output:
   html_document:
@@ -32,6 +32,8 @@ library(dplyr)
 library(ggplot2)
 library(brms)
 theme_set(theme_light())
+dir.create("cache", showWarnings = FALSE)
+options(brms.file_refit = "on_change") # re-fit cached models if changes
 ```
 
 Any time we use rstan (or a package that relies on rstan, such as brms or rstanarm), we can set an R option to use parallel processing with all available cores: `options(mc.cores = parallel::detectCores())`. This example should run so quickly that it will likely run faster on a single core, so you may choose to skip this or explicitly set it to 1 core.
@@ -96,6 +98,7 @@ fit <- brm(
   data = d, 
   iter = 2000, 
   chains = 4,
+  file = "cache/seahare",
   prior = c(
       set_prior("normal(0, 5)", class = "b"),
       set_prior("normal(0, 10)", class = "Intercept"),
@@ -346,7 +349,7 @@ head(newdata)
 We can extract samples from the linear predictor with the `posterior_linpred()` function. These are samples from the posterior without observation error. In other words, these are similar in concept to the confidence interval you would get out of `predict.glm()` or `predict.lm()`.
 
 ```{r}
-posterior_linear <- posterior_linpred(fit, newdata = newdata)
+posterior_linear <- posterior_epred(fit, newdata = newdata)
 dim(posterior_linear)
 ```
 
@@ -445,40 +448,4 @@ What's the probabilty this ratio is greater than 3?
 mean(ratio > 3)
 ```
 
-*If you can think it you can quantify it*! And all you have to do is manipulate the MCMC samples. Add, subtract, multiply, or divide as needed.
-
-# Model comparison
-
-A fairly recent development in the Bayesian world is the advent of 'good' methods for model comparison that are easily implemented. The current best practice is to use LOOIC, which stands for the leave-one-out information criterion. We can calculate it with the loo package, which is also written by the Stan development team.
-
-As an example, let's refit our model but also include interactions between nutrients and pH. What does this mean in terms of the flexibility of our model?
-
-We'll use the `update()` method to refit our model without specifying all the arguments again. 
-
-```{r, results='hide', warning=FALSE, results="hide"}
-fit2 <- update(fit, formula. = . ~ . +
-  nutrients:ph_scaled + nutrients:I(ph_scaled^2))
-```
-
-First we should make sure that the chains look like they've converged.
-
-```{r}
-summary(fit2)
-plot(fit2)
-pp_check(fit2, plotfun = "dens_overlay")
-```
-
-Now we can compare the models with LOOIC. We will set `k_threshold = 0.7`. The `k` value is an indication of how well the approximation of leaving out a single data point is expected to be to actually refitting the model and leaving out that data point. The Stan developers recommend 0.7 as a reasonable threshold. By setting the threshold, brms will refit the model successively leaving out any data points that weren't well approximated. This is quite fast here, but could be slow for much more complicated models or models for much larger data sets. 
-
-```{r}
-loo1 <- loo(fit, moment_match = TRUE)
-loo2 <- loo(fit2, moment_match = TRUE)
-```
-
-We could compare those values ourselves, but we can also use the `loo::compare_models()` function to compare them. Note that we also get a standard error on the comparison here, in contrast to working with something like AIC.
-
-```{r}
-loo_compare(loo1, loo2)
-```
-
-So this suggests the model without the interaction is preferred, but the difference is not large.
+If you can think it you can quantify it. And all you have to do is manipulate the MCMC samples. Add, subtract, multiply, or divide as needed.
