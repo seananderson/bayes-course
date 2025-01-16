@@ -1,5 +1,5 @@
 ---
-title: Leave-one-out cross validation, log scores, and ELPD
+title: "Leave-one-out cross validation, log scores, and ELPD"
 output:
   html_document:
     toc: true
@@ -275,8 +275,8 @@ Compute R^2 and LOO-R^2 manually:
 ```{r, message=FALSE}
 respost <- kidiq$kid_score - fit_3$fitted.values
 resloo <- kidiq$kid_score - loo_predict(fit_3)$value
-round(R2 <- 1 - var(respost) / var(kidiq$kid_score), 2)
-round(R2loo <- 1 - var(resloo) / var(kidiq$kid_score), 2)
+round(R2 <- 1 - var(respost) / var(kidiq$kid_score), 3)
+round(R2loo <- 1 - var(resloo) / var(kidiq$kid_score), 3)
 ```
 
 Add five pure noise predictors to the data:
@@ -303,8 +303,8 @@ Compute R^2 and LOO-R^2 manually:
 ```{r, message=FALSE}
 respostn <- kidiq$kid_score - fit_3n$fitted
 resloon <- kidiq$kid_score - loo_predict(fit_3n)$value
-round(R2n <- 1 - var(respostn) / var(kidiq$kid_score), 2)
-round(R2loon <- 1 - var(resloon) / var(kidiq$kid_score), 2)
+round(R2n <- 1 - var(respostn) / var(kidiq$kid_score), 3)
+round(R2loon <- 1 - var(resloon) / var(kidiq$kid_score), 3)
 ```
 
 R^2 got better! LOO-R^2 got worse.

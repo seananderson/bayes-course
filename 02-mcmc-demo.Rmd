@@ -1,6 +1,5 @@
 ---
 title: "The Metropolis MCMC algorithm in R"
-author: "Sean Anderson"
 output:
   html_document:
     toc: true

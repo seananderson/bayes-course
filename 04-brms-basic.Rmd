@@ -1,6 +1,5 @@
 ---
 title: "An introduction to applied Bayesian regression using brms"
-author: "Sean Anderson"
 output:
   html_document:
     toc: true

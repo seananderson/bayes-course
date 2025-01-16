@@ -17,3 +17,8 @@ files <- list.files(here::here(), pattern = "*.Rmd")
 
 ## knit all exercises (slow)
 purrr::walk(files, rmarkdown::render, envir = new.env())
+
+library(future)
+plan(multisession)
+furrr::future_walk(files, rmarkdown::render, envir = new.env(), .options = furrr::furrr_options(seed = TRUE))
+plan(sequential)

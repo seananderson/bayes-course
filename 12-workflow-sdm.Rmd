@@ -1,6 +1,9 @@
 ---
 title: "Bayesian workflow"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 maybe positive depth curves for a 5 or 6 groundfish... question is if they should be grouped or not

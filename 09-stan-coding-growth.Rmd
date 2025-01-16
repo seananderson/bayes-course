@@ -1,5 +1,5 @@
 ---
-title: Coding in Stan
+title: "More coding in Stan: a non-linear model example"
 output:
   html_document:
     toc: true
@@ -12,6 +12,9 @@ library(dplyr)
 library(ggplot2)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
+show_file <- function(file) {
+  cat(paste(readLines(file), collapse = "\n"))
+}
 ```
 
 ```{r}
@@ -31,9 +34,16 @@ dat <- list(
 )
 ```
 
+```{r}
+show_file("vb/vb_basic.stan")
+```
+
+```{r}
+show_file("vb/vb_norm.stan")
+```
+
 ```{r, results="hide", message=FALSE}
-mod <- stan_model("vb/vb_norm.stan")
-fit1 <- sampling(mod, data = dat, iter = 1000, chains = 4, seed = 9129)
+fit1 <- stan("vb/vb_norm.stan", data = dat, iter = 1000, chains = 4, seed = 9129)
 ```
 
 ```{r}
@@ -103,6 +113,10 @@ loo1
 
 Take the above model and modify it to allow for separate k, linf, and t0 by survey region (HS vs. WCVI). Share the observation error SD. Ask whether LOO ELPD favours us estimating separate regions or defining them as one stock (according to this criteria).
 
+```{r}
+show_file("vb/vb_norm_regions.stan")
+```
+
 ```{r, results="hide"}
 dat2 <- dat
 levels(factor(d$survey))
@@ -110,8 +124,7 @@ unique(as.integer(factor(d$survey)))
 dat2$survey_id <- as.integer(factor(d$survey))
 dat2$N_surveys <- 2
 
-mod2 <- stan_model("vb/vb_norm_regions.stan")
-fit2 <- sampling(mod2, data = dat2, iter = 1000, chains = 4, seed = 9129)
+fit2 <- stan("vb/vb_norm_regions.stan", data = dat2, iter = 1000, chains = 4, seed = 9129)
 ```
 
 ```{r}

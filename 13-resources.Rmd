@@ -1,6 +1,9 @@
 ---
-title: "Advice, links, and useful resources"
-output: html_document
+title: "Useful resources"
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 # Stan resources

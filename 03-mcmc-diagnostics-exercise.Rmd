@@ -1,5 +1,9 @@
 ---
 title: MCMC diagnostics
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 For each of the following sets of MCMC chains, answer the following:

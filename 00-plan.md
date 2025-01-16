@@ -1,6 +1,8 @@
 ---
-title: An introduction to applied Bayesian data analysis for ecologists
-output: html_document
+title: "An introduction to applied Bayesian data analysis for ecologists"
+output:
+  html_document:
+    toc: true
 ---
 
 # Objectives

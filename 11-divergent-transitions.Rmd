@@ -1,5 +1,9 @@
 ---
-title: Divergent transitions
+title: "Divergent transitions"
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 Divergent transitions are an important diagnostic with the NUTS MCMC algorithm that Stan uses. **We should be weary of any divergent transitions.** They can be an important diagnostic of a coding error, an inefficient implementation of a model, or a model that is too complex for a given dataset. They can result in biased parameter estimates.
