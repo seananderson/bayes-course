@@ -29,6 +29,8 @@ df <- readRDS("data/ppcheck-df1.rds")
 yrep <- readRDS("data/ppcheck-yrep1.rds")
 ```
 
+Hint: try visualizations of `df$y` and `yrep` values against `x`.
+
 ```{r}
 y <- df$y
 bayesplot::ppc_dens_overlay(y, yrep)
