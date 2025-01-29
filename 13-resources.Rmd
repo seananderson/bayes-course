@@ -42,6 +42,8 @@ Statistical Rethinking Fall 2017 lectures:
 
 Monnahan, C.C., Thorson, J.T., and Branch, T.A. 2016. Faster estimation of Bayesian models in ecology using Hamiltonian Monte Carlo. Methods Ecol Evol. <https://doi.org/10.1111/2041-210X.12681>.
 
+Banner, K.M., Irvine, K.M., and Rodhouse, T. 2020. The Use of Bayesian Priors in Ecology: The Good, The Bad, and The Not Great. Methods Ecol Evol: 2041–210X.13407. <https://doi:10.1111/2041-210X.13407>.
+
 Gabry, J., Simpson, D., Vehtari, A., Betancourt, M., and Gelman, A. 2019. Visualization in Bayesian workflow. Journal of the Royal Statistical Society Series A: Statistics in Society 182(2): 389–402. <https://doi.org/10.1111/rssa.12378>
 
 Gelman, A., Vehtari, A., Simpson, D., Margossian, C.C., Carpenter, B., Yao, Y., Kennedy, L., Gabry, J., Bürkner, P.-C., and Modrák, M. 2020. Bayesian Workflow. arXiv:2011.01808. <https://arxiv.org/abs/2011.01808>
