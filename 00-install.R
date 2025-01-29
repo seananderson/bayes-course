@@ -72,5 +72,24 @@ fit1 <- stan(model_code = scode, iter = 50, verbose = FALSE, chains = 1)
 if (identical(class(fit1)[[1]], "stanfit")) {
   cat("Stan is working. Congratulations! You're done. You can ignore any warnings about 'R-hat' and 'Effective Samples Size (ESS)' above\n")
 } else {
-  cat("Stan is *not* working. Please ask ask a coworker or contact Sean.\n")
+  cat("Stan is *not* working. Please ask a coworker or contact Sean.\n")
+}
+
+# Check brms -------------------------------------------
+
+library(brms)
+fit1 <- brm(
+  count ~ zBase * Trt + (1|patient),
+  data = epilepsy, family = poisson(),
+  chains = 1, iter = 1000,
+  prior = prior(normal(0, 1), class = b) +
+    prior(cauchy(0, 1), class = sd)
+)
+summary(fit1)
+# Ignore any warnings about R-hat or ESS
+
+if (identical(class(fit1)[[1]], "brmsfit")) {
+  cat("brms is working. You can ignore any warnings about 'R-hat' and 'Effective Samples Size (ESS)' above\n")
+} else {
+  cat("brms is *not* working. Please ask a coworker or contact Sean.\n")
 }
