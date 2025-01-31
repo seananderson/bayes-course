@@ -6,20 +6,10 @@ output:
     toc_float: true
 ---
 
-```{r, echo=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 6,
-  fig.asp = 0.618,
-  fig.align = "center"
-)
-```
-
 # Objectives
 
 - Learn to fit pre-packaged Bayesian regression models with brms.
-- Become familiar with the concepts of posterior predictive checking and 
+- Gain initial exposure to posterior predictive checking and 
   manipulating posterior samples to calculate posterior probabilities.
   
 # Setup
@@ -51,10 +41,10 @@ Hughes, B.B., Lummis, S.C., Anderson, S.C., and Kroeker, K.J. 2018. Unexpected r
 The data come from a mesocosm experiment by Brent Hughes where he manipulated water pH and whether or not nutrients were added (to represent nutrient loads in eelgrass beds) to 14 200L barrels. He measured a number of variables, but the response variable we are going to work with here is the increase in mass of seahares (*Phyllaplysia taylori*), a type of sea slug, after 24 days.
 
 ```{r}
-d <- readRDS("data/hughes-etal-2018.rds") %>%
-  filter(label == "Change in seahare mass (g FW)") %>% 
-  rename(change_seahare_mass_g_fw = value) %>% 
-  select(-label, -figure_panel, -nutrients_text, -response)
+d <- readRDS("data/hughes-etal-2018.rds") |>
+  filter(label == "Change in seahare mass (g FW)") |> 
+  rename(change_seahare_mass_g_fw = value) |> 
+  dplyr::select(-label, -figure_panel, -nutrients_text, -response)
 glimpse(d)
 ```
 
@@ -64,7 +54,7 @@ ggplot(d,
   geom_point()
 ```
 
-Let's rescale (center and possibly divide by 2 SDs) the predictors. This is important
+Let's rescale (center and possibly divide by the SD) the predictors. This is important
 
 1. so that we have some idea of what reasonable prior values will be,
 2. so that our coefficients are on a reasonable scale for interpretation and 
@@ -135,17 +125,12 @@ summary(fit, priors = TRUE)
 summary(fit, prob = 0.87)
 ```
 
-There are a lot of helper functions in brms to explore. Here are some useful ones:
+There are a lot of helper functions in brms to explore. Here are a few useful ones:
 
 ```{r}
 brms::prior_summary(fit)
-# brms::conditional_effects(fit)
-# brms::posterior_linpred(fit)
-# brms::posterior_predict(fit)
-# brms::as_draws(fit)
-brms::stancode(fit)
+brms::stancode(fit) # not easy to read!
 brms::standata(fit)
-# brms::LOO(fit)
 ```
 
 # Inspecting the chains for convergence
@@ -267,9 +252,7 @@ bayesplot::mcmc_areas_ridges(fit) # exercise
 - What does the `I(ph_scaled^2)` coefficient represent?
 - What does the `sigma` coefficient represent?
 
-Think back to our introduction to Bayesian statistics. How do we interpret these summaries of the coefficients probabilistically?
-
-Note that we can easily extract the credible intervals with:
+We can easily extract the credible intervals with:
 
 ```{r}
 posterior_interval(fit)
@@ -317,7 +300,7 @@ Plot them both:
 # note `after_stat(density)` to get probability densities not counts
 # see `?geom_histogram()`
 ggplot() +
-  geom_histogram(data = post, aes(b_ph_scaled, after_stat(density)), 
+  geom_histogram(data = post, aes(b_Iph_scaledE2, after_stat(density)), 
     bins = 80) +
   geom_ribbon(data = prior, aes(x = b_ph_scaled, 
     ymax = density, ymin = 0), fill = "blue", alpha = 0.5) +
@@ -332,7 +315,7 @@ One thing we haven't done is test the sensitivity of our posterior samples to th
 The shinystan package is a one-stop shop for inspecting a Stan model. For a model fit with brms, rstanarm, or rstan we can launch it with:
 
 ```{r, eval=FALSE}
-launch_shinystan(fit)
+shinystan::launch_shinystan(fit)
 ```
 
 # Plotting the posterior distribution of the linear predictor
@@ -394,9 +377,9 @@ post
 What if we wanted to know the probability that there is a negative (frowning) quadratic shape (vs. a positive (smiling) quadratic shape) to the relationship? We can get that from the ph^2 term since we centered our ph predictor before fitting.
 
 ```{r}
-ph2_samples <- post$b_ph_scaled
-mean(ph2_samples < 0)
-mean(ph2_samples > 0)
+ph2_samples <- post$b_Iph_scaledE2
+mean(ph2_samples < 0) # prob. frowny
+mean(ph2_samples > 0) # prob. smiley
 ```
 
 We're taking advantage of the fact that R treats `TRUE` and `FALSE` as 1 and 0. So by taking the mean, we are doing the same thing as:
@@ -413,9 +396,9 @@ mean(post$b_nutrients < 0)
 
 A major benefit to MCMC sampling of Bayesian models is how easy it is to quantify any comparison you want to make. 
 
-For example, how much greater would you expect the change in seahare mass to be under conditions of the lowest pH tested with nutrients compared to the average pH condition without nutrients?
+For example, how much greater would you expect the change in seahare mass to be under conditions of the lowest pH tested without nutrients compared to the average pH condition with nutrients?
 
-I.e. compare the blue posterior in the lower left to the pink posterior in the middle of the last plot. Let's compare the expectations not the ratio of new observations including their observation error (i.e. the linear predictions not the full "posterior predictions").
+I.e. compare the pink posterior in the lower left to the blue posterior in the middle of the last plot.
 
 ```{r}
 min_ph <- min(d$ph_scaled)
@@ -428,7 +411,7 @@ pp1 <- posterior_linpred(fit, newdata = condition1)[,1]
 
 condition2 <- data.frame(
   ph_scaled = mean_ph,
-  nutrients = c(0))
+  nutrients = c(1))
 pp2 <- posterior_linpred(fit, newdata = condition2)[,1]
 
 ratio <- exp(pp2) / exp(pp1)
@@ -441,10 +424,10 @@ quantile(ratio, probs = c(0.11, 0.5, 0.89))
 mean(ratio > 1)
 ```
 
-What's the probabilty this ratio is greater than 3?
+What's the probabilty this ratio is greater than 1.5?
 
 ```{r}
-mean(ratio > 3)
+mean(ratio > 1.5)
 ```
 
 If you can think it you can quantify it. And all you have to do is manipulate the MCMC samples. Add, subtract, multiply, or divide as needed.

@@ -6,6 +6,13 @@ output:
     toc_float: true
 ---
 
+# Goals:
+
+- Understand ELPD and LOO concepts
+- Understand the 'loo' R package approximation
+
+# Background
+
 This material builds on code from the book:
 
 Gelman, A., Hill, J., and Vehtari, A. 2021. Regression and other stories. Cambridge University Press, Cambridge. doi:10.1017/9781139161879. <https://avehtari.github.io/ROS-Examples/>

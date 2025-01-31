@@ -145,4 +145,25 @@ ggplot(tibble(x), aes(exp(x))) +
   theme_void()
 ggsave("extra/dist-uniform-exp-samples.pdf", width = 6, height = 6 * 0.618)
 
+library(dplyr)
+library(ggplot2)
+library(ggdist)
 
+# theme_set(theme_ggdist())
+
+expand.grid(
+  eta = 1:4,
+  K = 2:5
+) %>%
+  ggplot(aes(y = ordered(eta), dist = "lkjcorr_marginal", arg1 = K, arg2 = eta)) +
+  stat_slab() +
+  facet_grid(~ paste0(K, "x", K)) +
+  scale_y_discrete(limits = rev) +
+  labs(
+    title = paste0(
+      "LKJ prior on different matrix sizes"
+    ),
+    y = "eta",
+    x = "Marginal correlation"
+  )
+  # theme(axis.title = element_text(hjust = 0))

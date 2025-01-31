@@ -16,16 +16,6 @@ output:
 
 # Setup
 
-```{r, echo=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 6,
-  fig.asp = 0.618,
-  fig.align = "center"
-)
-```
-
 ```{r, message=FALSE, warning=FALSE}
 library(ggplot2)
 library(dplyr)

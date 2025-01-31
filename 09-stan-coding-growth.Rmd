@@ -6,6 +6,12 @@ output:
     toc_float: true
 ---
 
+# Goals:
+
+- Gain exposure to a non-linear model written in Stan that's more complicated than the simple linear regression.
+- See how we can do posterior (and prior) predictive simulations in a custom Stan model.
+- Gain an initial exposure to Bayesian model comparison.
+
 ```{r, message=FALSE, warning=FALSE}
 library(rstan)
 library(dplyr)
@@ -17,12 +23,28 @@ show_file <- function(file) {
 }
 ```
 
+These are Pacific Cod age and length data from two synoptic trawl surveys in BC.
+
 ```{r}
 d <- readRDS("data/pcod-growth.rds")
 d$i <- seq_len(nrow(d))
 ggplot(d, aes(age, length)) + geom_point() +
   facet_wrap(~survey)
 ```
+
+We will fit a von Bertalanffy growth model to them. Here's a simple version:
+
+```{r}
+show_file("vb/vb_basic.stan")
+```
+
+This version has some more bells and whistles:
+
+```{r}
+show_file("vb/vb_norm.stan")
+```
+
+Form our data list for rstan:
 
 ```{r}
 dat <- list(
@@ -34,21 +56,21 @@ dat <- list(
 )
 ```
 
-```{r}
-show_file("vb/vb_basic.stan")
-```
-
-```{r}
-show_file("vb/vb_norm.stan")
-```
+Sample from our model:
 
 ```{r, results="hide", message=FALSE}
 fit1 <- stan("vb/vb_norm.stan", data = dat, iter = 1000, chains = 4, seed = 9129)
 ```
 
+Print the parameters of interest:
+
+Question: why am I specifying the parameters explicitly here?
+
 ```{r}
 print(fit1, pars = c("k", "linf", "t0", "sigma"))
 ```
+
+There are many formats we can extract posterior samples in:
 
 ```{r}
 sims_list <- extract(fit1)
@@ -65,6 +87,8 @@ colnames(sims_array[1,,])[1:4]
 sims_df <- as.data.frame(fit1)
 head(sims_df[,1:4])
 ```
+
+Look at MCMC trace plots:
 
 ```{r}
 dim(sims_array)
@@ -93,7 +117,7 @@ ggplot(post, aes(age, .value, group = .draw)) + geom_line(alpha = 0.2) +
   geom_point(data = d, mapping = aes(age, length), inherit.aes = FALSE, alpha = 0.2)
 ```
 
-The parameters themselves:
+The parameter posteriors:
 
 ```{r}
 post <- tidybayes::gather_draws(fit1, c(k, linf, t0, sigma))
@@ -102,16 +126,16 @@ ggplot(post, aes(.value)) + geom_histogram() +
   facet_wrap(~.variable, scales = "free_x")
 ```
 
-We can calculate ELPD of a leave-one-out approximation because we included `log_lik` in our `generated quantities` section. It's not all that useful yet though, since we've only fit one model.
+We can calculate ELPD (expected log predictive density) of a leave-one-out approximation because we included `log_lik` in our `generated quantities` section. It's not all that useful yet though, since we've only fit one model.
 
 ```{r}
 loo1 <- loo(fit1)
 loo1
 ```
 
-# Exercise
+# Extending our model
 
-Take the above model and modify it to allow for separate k, linf, and t0 by survey region (HS vs. WCVI). Share the observation error SD. Ask whether LOO ELPD favours us estimating separate regions or defining them as one stock (according to this criteria).
+We're now going to take the above model and modify it to allow for separate k, linf, and t0 by survey region (HS vs. WCVI). We want to ask whether there is evidence in the growth curve that we should be treating these regions as separate stocks.
 
 ```{r}
 show_file("vb/vb_norm_regions.stan")
@@ -204,23 +228,24 @@ hist(linf_diff)
 hist(t0_diff)
 ```
 
+# Excercise:
+
 Using those posterior draws, answer the following questions:
 
 What is the probability that linf is greater in WCVI than in HS?
 
 ```{r}
-mean(linf_diff > 0)
+mean(linf_diff > 0) # exercise
 ```
 
 What is the probability that linf is at least 5 cm greater in WCVI than in HS?
 
 ```{r}
-mean(linf_diff > 5)
+mean(linf_diff > 5) # exercise
 ```
 
-What is the probability that linf in WCVI is between 3 cm greater or 3 cm less than linf in HS?
+What is the probability that linf in WCVI is different from linf in HS by more than 4cm?
 
 ```{r}
-1 - mean(linf_diff > 3 | linf_diff < -3)
-mean(linf_diff <= 3 & linf_diff >= -3)
+mean(linf_diff > 4 | linf_diff < -4)  # exercise
 ```

@@ -71,45 +71,6 @@ priors1 <- brm(
     set_prior("student_t(3, 0, 3)", class = "sigma")
   )
 )
-
-prior_predictive <- brms::posterior_predict(priors1)
-prior_predictive_push <- brms::posterior_epred(priors1)
-
-set.seed(1)
-i <- sample(1:nrow(prior_predictive), 4)
-
-d$yrep_prior1 <- prior_predictive[i[1], ]
-d$yrep_prior2 <- prior_predictive[i[2], ]
-d$yrep_prior3 <- prior_predictive[i[3], ]
-d$yrep_prior4 <- prior_predictive[i[4], ]
-d$yrep_pushforward_prior1 <- prior_predictive_push[i[1], ]
-d$yrep_pushforward_prior2 <- prior_predictive_push[i[2], ]
-d$yrep_pushforward_prior4 <- prior_predictive_push[i[4], ]
-d$yrep_pushforward_prior3 <- prior_predictive_push[i[3], ]
-
-ggplot(d, aes(logdepth, density)) +
-  geom_point() +
-  ggtitle("Observed data")
-
-g1 <- ggplot(d, aes(logdepth, exp(yrep_prior1))) +
-  geom_point()
-g2 <- ggplot(d, aes(logdepth, exp(yrep_prior2))) +
-  geom_point()
-g3 <- ggplot(d, aes(logdepth, exp(yrep_prior3))) +
-  geom_point()
-g4 <- ggplot(d, aes(logdepth, exp(yrep_prior4))) +
-  geom_point()
-patchwork::wrap_plots(g1, g2, g3, g4)
-
-g1 <- ggplot(d, aes(logdepth, exp(yrep_pushforward_prior1))) +
-  geom_point()
-g2 <- ggplot(d, aes(logdepth, exp(yrep_pushforward_prior2))) +
-  geom_point()
-g3 <- ggplot(d, aes(logdepth, exp(yrep_pushforward_prior3))) +
-  geom_point()
-g4 <- ggplot(d, aes(logdepth, exp(yrep_pushforward_prior4))) +
-  geom_point()
-patchwork::wrap_plots(g1, g2, g3, g4)
 ```
 
 ```{r}
@@ -133,6 +94,8 @@ ggplot(pp, aes(depth_m, .epred)) + geom_point() +
   scale_x_log10() + 
   ggtitle("Prior pushforward simulation")
 ```
+
+What about if we had much wider priors?
 
 ```{r, results="hide", warning=FALSE}
 priors2 <- brm(
@@ -161,6 +124,12 @@ ggplot(pp, aes(depth_m, .prediction, colour = type)) + geom_point() +
   scale_x_log10() + 
   ggtitle("Redbanded Rockfish: wide priors")
 ```
+
+Now we're going to fit 3 models. 
+
+1. A quadratic effect of depth.
+2. Let those quadratic curves vary by species.
+3. Also let each species have its own level of observation error.
 
 ```{r, results="hide"}
 fit1 <- brm(
@@ -269,6 +238,8 @@ yrep3 <- posterior_predict(fit3, ndraws = 20)
 bayesplot::ppc_dens_overlay_grouped(y, yrep3, group = d$fspecies)
 ```
 
+Question: these maybe still aren't perfect. What are some possible reasons for that? How might we expand the model in reality?
+
 ```{r}
 red <- filter(d, fspecies == "redbanded rockfish")
 obs <- mutate(red, .prediction = log(density), .draw = 0)
@@ -280,7 +251,13 @@ pp1 <- bind_rows(pp1, obs) |>
 pp3 <- tidybayes::predicted_draws(fit3, newdata = red, ndraws = 8)
 pp3 <- bind_rows(pp3, obs) |> 
   mutate(type = ifelse(.draw != 0, "Simulated", "Observed"))
+```
 
+Question: can you tell what is off in the posterior predictive simulations for this example in model 1?
+
+Hint: look at the spread.
+
+```{r}
 ggplot(pp1, aes(depth_m, .prediction, colour = type)) + geom_point() +
   facet_wrap(~.draw) +
   scale_x_log10() + 
@@ -294,15 +271,12 @@ ggplot(pp3, aes(depth_m, .prediction, colour = type)) + geom_point() +
 
 ```{r}
 yrep1 <- posterior_predict(fit1)
-yrep2 <- posterior_predict(fit2)
 yrep3 <- posterior_predict(fit3)
 
 ppc_stat_grouped(y, yrep1, stat = "median", group = d$fspecies)
-ppc_stat_grouped(y, yrep2, stat = "median", group = d$fspecies)
 ppc_stat_grouped(y, yrep3, stat = "median", group = d$fspecies)
 
 ppc_stat_grouped(y, yrep1, stat = "sd", group = d$fspecies)
-ppc_stat_grouped(y, yrep2, stat = "sd", group = d$fspecies)
 ppc_stat_grouped(y, yrep3, stat = "sd", group = d$fspecies)
 
 iqr <- function(x) {
@@ -311,7 +285,6 @@ iqr <- function(x) {
   q75 - q25
 }
 ppc_stat_grouped(y, yrep1, stat = "iqr", group = d$fspecies)
-ppc_stat_grouped(y, yrep2, stat = "iqr", group = d$fspecies)
 ppc_stat_grouped(y, yrep3, stat = "iqr", group = d$fspecies)
 
 # what about by year?

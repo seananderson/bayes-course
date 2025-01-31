@@ -17,9 +17,9 @@ output:
 
 5. Learn the basics of Stan model syntax and how to interact with Stan in R.
 
-6. Put together what we've learned into a full Bayesian workflow.
+6. Become familiar with how the pieces fit together into a Bayesian workflow.
 
-7. Throughout, become familiar with several useful tools around Stan and R (rstan, cmdstanr, bayesplot, loo, tidybayes).
+7. Throughout, gain some familiarity with several useful tools built around Stan and R (e.g., rstan, brms, bayesplot, loo, tidybayes).
 
 6. Leave with some ideas for where to find more information.
 
@@ -52,62 +52,59 @@ output:
 <!-- day 1 -->
 
 1. Introduction to probability, Bayes' theorem, when to go Bayesian
-   (slides and group exercises)
-  - an introduction to Bayes' theorem and Bayesian updating
-  - frequentist vs. Bayesian inference interpretation
-  - went to go Bayes: advantages and disadvantages
+  - Slides: an introduction to Bayes' theorem and Bayesian updating
+  - Slides: frequentist vs. Bayesian inference interpretation
+  - Slides: went to go Bayes: advantages and disadvantages
   - *All together exercise*: small world Bayesian updating
-  - manipulating and summarizing the posterior various ways
+  - Rmd: manipulating and summarizing the posterior various ways
 
 2. Demystifying MCMC (group exercises and online demo)
-  - run through Metropolis MCMC in R and plot the chain together
-  - experiment with tuning MCMC
-  - play with online demo of Hamiltonian and NUTS MCMC
-  - *Small groups exercise*: tuning MCMC, play with online MCMC samplers
+  - Slides: MCMC intro
+  - Rmd: run through Metropolis MCMC in R and plot the chain together
+  - *Individual exercise*: tuning MCMC
+  - Hamiltonian and NUTS slides
+  - *Individual exercise*: play with online demo of Hamiltonian and NUTS MCMC
+
+3. Introduction to applied Bayesian modeling
+  - Rmd: 04-brms-basic.Rmd
+    - fit a regression model with brms 
+    - inspect MCMC chains for convergence
+    - summarize MCMC chains to quantify the posterior
+    - first intro to posterior predictive checking
+    - making probabilistic statements by manipulating the  posterior samples
 
 <!-- day 2 -->
 
-3. Introduction to applied Bayesian modeling (group walk-through of code)
-  - fit a regression model with brms 
-  - inspect MCMC chains for convergence
-  - summarize MCMC chains to quantify the posterior
-  - learn about the concept of posterior predictive checking and experiment 
-    with posterior protective checks
-  - experiment with making probabilistic statements by manipulating the 
-    posterior samples
-  - *Small groups exercise*: posterior predictive checking and probabilistic statements
-  
 4. Convergence and MCMC diagnostics
-  - understand what we're aiming for
-  - visualizations
-  - explain Rhat and the ESS metrics
-  - divergent transitions, `adapt_delta`, `max_treedepth`
-  - *Small group exercise*: diagnose (and fix) issues with a set of models
+  - Slides: MCMC diagnostics part 1
+  - *Small groups exercise*: MCMC diagnostics
+  - Slides: divergent transitions
+  - Rmd: divergent transitions
 
-5. All about priors (interactive code, slides, and discussion)
-  - experiment with an interactive simulation
-  - talk about weakly informative priors, informative priors, and the 
-    fallacy of uninformative priors
-  - go through a series of examples and discuss reasonable prior strategies in
-    small groups and together
-  - introduce prior predictive checks
-  - *Small groups exercise*: assessing prior influence and prior predictive checks
+5. Posterior predictive checking
+  - Slides: posterior predictive checking
+  - *Small groups exercise*: posterior predictive checking
+
+6. Priors (interactive code, slides, and discussion)
+  - Slides: goals of priors, types of priors
+  - *Small groups exercise*: experiment with an interactive prior demo
+  - Slides: prior predictive checks
+  - Rmd: brms priors and prior predictive checks
 
 <!-- day 3 -->
 
 6. Introduction to Stan code and rstan
+  - Slides: Stan model syntax
+  - Rmd: regression with a Stan model
   - understand when/why you might use brms vs. custom Stan code
   - look at the syntax and the code sections of a Stan model
   - call the Stan model from R
   - extract the posterior samples and make similar plots as before
-  - introduce (via slides) how to do prior predictive and posterior predictive
-    checks with custom Stan models; introduce how to do LOOIC calculations with
-    custom Stan models
   - fit an length-age growth model to groundfish data and summarize the output
-  - *Small groups exercises*: plot parameter posteriors and linear predictor,
-     change a prior, code a prior predictive check, code a posterior predictive
-     check
-  - *Small groups exercise?*: build on growth model to assess one-stock assumption
+
+7. Leave-one-out cross validation, log scores, and ELPD
+  - Slides: cross-validation concepts and terms
+  - Rmd: ELPD + LOO
   
 <!-- day 4 -->
   
