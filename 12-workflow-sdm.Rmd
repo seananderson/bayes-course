@@ -1,16 +1,16 @@
 ---
-title: "Bayesian workflow"
+title: "Bayesian workflow example"
 output:
   html_document:
     toc: true
     toc_float: true
 ---
 
-# Goals:
+## Goals:
 
 - Work through the steps of a Bayesian workflow for an applied example.
 - Gain more experience with brms
-- Practice posterior predictive checking
+- Practice prior and posterior predictive checking
 - Gain brief exposure to a mixed effects model in brms with hierarchical variances
 
 ```{r, message=FALSE, warning=FALSE}
@@ -23,6 +23,8 @@ options(mc.cores = parallel::detectCores()) # parallel chains
 options(brms.file_refit = "on_change") # re-fit cached models if changes
 dir.create("cache", showWarnings = FALSE)
 ```
+
+## The data and question of interest
 
 These are rockfish densities from DFO's synoptic bottom trawl surveys off BC. I've only included densities for tows where that rockfish was caught. I.e., I've removed the zeros so we can work with a simple Gaussian model of log transformed rockfish densities.
 
@@ -41,6 +43,8 @@ We're interested in predicting rockfish density in a tow as a product of depth. 
 Question: why work with log density as the response?
 Question: why work with log depth as the predictor?
 
+## Basic data exploration
+
 ```{r}
 ggplot(d, aes(log(depth_m), log(density_kgpm2))) +
   geom_point() +
@@ -55,6 +59,8 @@ ggplot(d, aes(log(depth_m), log(density_kgpm2))) +
   facet_wrap(~species_common_name) +
   geom_smooth(se = FALSE)
 ```
+
+## Prior predictive checks
 
 We'll start with some prior predictive checks.
 
@@ -155,6 +161,8 @@ ggplot(pp, aes(depth_m, .prediction, colour = type)) + geom_point() +
   ggtitle("Redbanded Rockfish: wide priors")
 ```
 
+## Fitting 3 models
+
 Now we're going to fit 3 models. 
 
 1. A quadratic effect of depth.
@@ -242,6 +250,8 @@ fit3 <- brm(
 )
 ```
 
+## Checking for convergence
+
 Look at our models:
 
 ```{r}
@@ -257,6 +267,8 @@ bayesplot::mcmc_trace(fit1, regex_pars = "^b_")
 bayesplot::mcmc_trace(fit3, regex_pars = "^b_")
 ```
 
+## Summarizing the parameters
+
 And we can summarize the parameter posterior distributions:
 
 ```{r}
@@ -271,6 +283,8 @@ If we wanted to make our own plot, we could have used this to get the data:
 bayesplot::mcmc_intervals_data(fit3, regex_pars = c("^b_")) |> 
   head()
 ```
+
+## Posterior predictive simulations
 
 Let's look at some posterior predictive simulations.
 
@@ -335,6 +349,8 @@ Question: can you tell what is off in the posterior predictive simulations for t
 
 Hint: look at the spread.
 
+## Posterior predictive simulations: statistical properties
+
 We can also visualize various statistical properties of our simulated and real observations. We'll focus on model 1 and 3 for brevity.
 
 ```{r}
@@ -376,6 +392,48 @@ We might also wonder, might this relationship be changing through time? Should w
 ppc_stat_grouped(y, yrep1, stat = "median", group = d$year)
 ```
 
+## Comparing models with ELPD
+
+We can look at ELPD-LOO:
+
+```{r}
+loo1 <- loo(fit1)
+loo2 <- loo(fit2)
+loo3 <- loo(fit3)
+loo_compare(loo1, loo2, loo3)
+```
+
+What does this tell us?
+
+We can also look at the pointwise LOO predictive densities themselves:
+
+```{r}
+elpdi1 <- loo1$pointwise[, "elpd_loo"]
+elpdi2 <- loo2$pointwise[, "elpd_loo"]
+elpdi3 <- loo3$pointwise[, "elpd_loo"]
+```
+
+And compare how good each model was at predicting each left-out point:
+
+```{r}
+d$diff32 <- elpdi3 - elpdi2
+d$diff21 <- elpdi2 - elpdi1
+
+ggplot(d, aes(logdepth, diff21, colour = fspecies, fill = fspecies)) +
+  geom_point() +
+  facet_wrap(~fspecies) +
+  geom_hline(yintercept = 0, lty = 2)
+
+ggplot(d, aes(logdepth, diff32, colour = fspecies, fill = fspecies)) +
+  geom_point() +
+  facet_wrap(~fspecies) +
+  geom_hline(yintercept = 0, lty = 2)
+```
+
+What can these tell us?
+
+## Visualizing the model predictions
+
 We can plot the expected values from the prediction across a sequence of depths.
 
 First, we could take a sequence of draws from the posterior:
@@ -416,47 +474,9 @@ ggplot(nd, aes(logdepth, exp(pp_med), colour = fspecies, fill = fspecies)) +
   geom_line()
 ```
 
-We can look at ELPD-LOO:
+## Questions:
 
-```{r}
-loo1 <- loo(fit1)
-loo2 <- loo(fit2)
-loo3 <- loo(fit3)
-loo_compare(loo1, loo2, loo3)
-```
-
-What does this tell us?
-
-We can also look at the pointwise LOO predictive densities themselves:
-
-```{r}
-elpdi1 <- loo1$pointwise[, "elpd_loo"]
-elpdi2 <- loo2$pointwise[, "elpd_loo"]
-elpdi3 <- loo3$pointwise[, "elpd_loo"]
-```
-
-And compare how good each model was at predicting each left-out point:
-
-```{r}
-d$diff32 <- elpdi3 - elpdi2
-d$diff21 <- elpdi2 - elpdi1
-
-ggplot(d, aes(logdepth, diff21, colour = fspecies, fill = fspecies)) +
-  geom_point() +
-  facet_wrap(~fspecies) +
-  geom_hline(yintercept = 0, lty = 2)
-
-ggplot(d, aes(logdepth, diff32, colour = fspecies, fill = fspecies)) +
-  geom_point() +
-  facet_wrap(~fspecies) +
-  geom_hline(yintercept = 0, lty = 2)
-```
-
-What can these tell us?
-
-# Questions:
-
-- What can we conclude from these data?
+- What can we conclude from these data given our models?
 - What of the above might we report in a paper?
 - What else might you consider adding to this model?
 - What are some possible uses for the posterior predictive simulations?
