@@ -35,8 +35,14 @@ tidybayes:
 Visualize MCMC algorithms including NUTS:
 <https://chi-feng.github.io/mcmc-demo/>
 
-Statistical Rethinking Fall 2017 lectures:
-<https://youtu.be/oy7Ks3YfbDg>
+# Online lecture recordings
+
+Statistical Rethinking Fall 2023 lectures:
+<https://www.youtube.com/playlist?list=PLDcUM9US4XdPz-KxHM4XHt7uUVGWWVSus>
+
+Recordings from Aki Vehtari's course:
+<https://avehtari.github.io/BDA_course_Aalto/Aalto2024.html>
+(scroll down)
 
 # Papers
 
@@ -55,6 +61,8 @@ Vehtari, A., Gelman, A., and Gabry, J. 2017. Practical Bayesian model evaluation
 Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. 2024, March 13. Pareto Smoothed Importance Sampling. arXiv. doi:10.48550/arXiv.1507.02646. <https://arxiv.org/abs/1507.02646>
 
 Betancourt, M. 2017. A Conceptual Introduction to Hamiltonian Monte Carlo. arXiv:1701.02434 [stat]. <http://arxiv.org/abs/1701.02434>
+
+Monnahan, C.C. 2024. Toward good practices for Bayesian data-rich fisheries stock assessments using a modern statistical workflow. Fisheries Research 275: 107024. <https://doi.org/10.1016/j.fishres.2024.107024>.
 
 # Textbooks 
 
@@ -76,6 +84,8 @@ Gelman, A., Hill, J., and Vehtari, A. 2021. Regression and other stories. Cambri
 Gelman, A., J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin. 2014. Bayesian Data Analysis. Chapman & Hall, Boca Raton, FL.
 
 - The Bayesian data analysis bible, but definitely not easy reading.
+
+**Official up-to-date PDF version**: <https://users.aalto.fi/~ave/BDA3.pdf>
 
 # Not specifically about Bayesian modeling, but still very useful
 

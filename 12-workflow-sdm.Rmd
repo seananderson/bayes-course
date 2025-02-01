@@ -6,7 +6,12 @@ output:
     toc_float: true
 ---
 
-maybe positive depth curves for a 5 or 6 groundfish... question is if they should be grouped or not
+# Goals:
+
+- Work through the steps of a Bayesian workflow for an applied example.
+- Gain more experience with brms
+- Practice posterior predictive checking
+- Gain brief exposure to a mixed effects model in brms with hierarchical variances
 
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
@@ -19,6 +24,8 @@ options(brms.file_refit = "on_change") # re-fit cached models if changes
 dir.create("cache", showWarnings = FALSE)
 ```
 
+These are rockfish densities from DFO's synoptic bottom trawl surveys off BC. I've only included densities for tows where that rockfish was caught. I.e., I've removed the zeros so we can work with a simple Gaussian model of log transformed rockfish densities.
+
 ```{r}
 d <- readRDS("data/rockfish-depth.rds")
 d$logdepth <- as.numeric(scale(log(d$depth_m)))
@@ -26,6 +33,13 @@ d$fyear <- factor(d$year)
 d$fspecies <- factor(d$species_common_name)
 d$density <- d$density_kgpm2 * 1000
 ```
+
+We can plot the raw data to see what the patterns look like.
+
+We're interested in predicting rockfish density in a tow as a product of depth. A question is can we treat these as coming from the same depth-density relationship or do they need their own curves?
+
+Question: why work with log density as the response?
+Question: why work with log depth as the predictor?
 
 ```{r}
 ggplot(d, aes(log(depth_m), log(density_kgpm2))) +
@@ -42,7 +56,7 @@ ggplot(d, aes(log(depth_m), log(density_kgpm2))) +
   geom_smooth(se = FALSE)
 ```
 
-Prior predictive checks
+We'll start with some prior predictive checks.
 
 We can find out what priors we need to specify with brms with `default_priors()`
 
@@ -53,6 +67,18 @@ default_prior(
   family = gaussian()
 )
 ```
+
+We're using the `Intercept` option in the formula so that brms doesn't transform the intercept to reflect its value when the other predictors are at their mean. It just simplifies our interpreation here.
+
+Let's sample from these priors.
+
+We'll start with N(0, 1) priors on the slope and quadratic coefficients and a half-Student-t(3, 0, 3) prior on the observation error SD.
+
+We've log transformed depth and we're modelling density as the response. So, a multiplicative increase in depth causes a multiplicative increase in density. We wouldn't expect such effects to be huge.
+
+E.g., if depth is doubled, how many times might we expect density to increase? Probably not millions of times on average.
+
+We're working with an intercept prior that roughly matches the mean of the data just to focus on the curvature aspect.
 
 ```{r, results="hide"}
 priors1 <- brm(
@@ -73,19 +99,21 @@ priors1 <- brm(
 )
 ```
 
+Let's pick out a species to look at our simulated data:
+
 ```{r}
 red <- filter(d, fspecies == "redbanded rockfish")
 obs <- mutate(red, .prediction = log(density), .draw = 0)
 
 pp <- tidybayes::predicted_draws(priors1, newdata = red, ndraws = 8)
-pp <- bind_rows(pp, obs) |> 
-  mutate(type = ifelse(.draw != 0, "Simulated", "Observed"))
 
-ggplot(pp, aes(depth_m, .prediction, colour = type)) + geom_point() +
+ggplot(pp, aes(depth_m, .prediction)) + geom_point() +
   facet_wrap(~.draw) +
   scale_x_log10() + 
   ggtitle("Prior predictive simulation")
 ```
+
+We can instead look at prior pushforward simulations:
 
 ```{r}
 pp <- tidybayes::epred_draws(priors1, newdata = red, ndraws = 9)
@@ -96,6 +124,8 @@ ggplot(pp, aes(depth_m, .epred)) + geom_point() +
 ```
 
 What about if we had much wider priors?
+
+Here I've included the data to help remember the scale of the original data. Have we gone beyond the realm of possible parameter space?
 
 ```{r, results="hide", warning=FALSE}
 priors2 <- brm(
@@ -131,6 +161,10 @@ Now we're going to fit 3 models.
 2. Let those quadratic curves vary by species.
 3. Also let each species have its own level of observation error.
 
+In reality, we'd probably start with the simplest, check our model, and then increase the complexity to address issues. We'll fit all 3 at once to keep this example easier to follow.
+
+First, a simple quadratic linear regression:
+
 ```{r, results="hide"}
 fit1 <- brm(
   log(density) ~ 0 + Intercept + logdepth + I(logdepth^2),
@@ -147,7 +181,12 @@ fit1 <- brm(
     set_prior("student_t(3, 0, 3)", class = "sigma")
   )
 )
+```
 
+Second, a version that enables each species to have it's own curve:
+
+```{r, results="hide"}
+# figure out the priors to specify
 default_prior(
   log(density) ~ 0 + Intercept + logdepth + I(logdepth^2) +
     (logdepth + I(logdepth^2) | fspecies),
@@ -173,7 +212,11 @@ fit2 <- brm(
     set_prior("student_t(3, 0, 3)", class = "sd")
   )
 )
+```
 
+Third, a version where we also let each species have its own observation error variance:
+
+```{r, results="hide"}
 fit3 <- brm(
   bf(
     log(density) ~ 0 + Intercept + logdepth + I(logdepth^2) +
@@ -199,16 +242,22 @@ fit3 <- brm(
 )
 ```
 
+Look at our models:
+
 ```{r}
 fit1
 fit2
 fit3
 ```
 
+We should look at traceplots:
+
 ```{r}
 bayesplot::mcmc_trace(fit1, regex_pars = "^b_")
 bayesplot::mcmc_trace(fit3, regex_pars = "^b_")
 ```
+
+And we can summarize the parameter posterior distributions:
 
 ```{r}
 bayesplot::mcmc_dens_chains(fit1, regex_pars = "^b_")
@@ -216,10 +265,14 @@ bayesplot::mcmc_areas(fit3, regex_pars = c("^b_", "sigma"))
 bayesplot::mcmc_intervals(fit3, regex_pars = c("^r_"))
 ```
 
+If we wanted to make our own plot, we could have used this to get the data:
+
 ```{r}
 bayesplot::mcmc_intervals_data(fit3, regex_pars = c("^b_")) |> 
   head()
 ```
+
+Let's look at some posterior predictive simulations.
 
 ```{r}
 y <- log(d$density)
@@ -228,34 +281,43 @@ bayesplot::ppc_dens_overlay(y, yrep1)
 bayesplot::ppc_dens_overlay_grouped(y, yrep1, group = d$fspecies)
 ```
 
+Question: how does that look?
+
 ```{r}
 yrep2 <- posterior_predict(fit2, ndraws = 20)
 bayesplot::ppc_dens_overlay_grouped(y, yrep2, group = d$fspecies)
 ```
+
+Question: is that better?
 
 ```{r}
 yrep3 <- posterior_predict(fit3, ndraws = 20)
 bayesplot::ppc_dens_overlay_grouped(y, yrep3, group = d$fspecies)
 ```
 
+Question: is that better? Which model best generates data that resemble the observations?
+
 Question: these maybe still aren't perfect. What are some possible reasons for that? How might we expand the model in reality?
 
+Let's dig into an example species:
+
 ```{r}
+# grab data for one species:
 red <- filter(d, fspecies == "redbanded rockfish")
 obs <- mutate(red, .prediction = log(density), .draw = 0)
 
+# make posterior predictions:
 pp1 <- tidybayes::predicted_draws(fit1, newdata = red, ndraws = 8)
 pp1 <- bind_rows(pp1, obs) |> 
   mutate(type = ifelse(.draw != 0, "Simulated", "Observed"))
 
+# make posterior predictions:
 pp3 <- tidybayes::predicted_draws(fit3, newdata = red, ndraws = 8)
 pp3 <- bind_rows(pp3, obs) |> 
   mutate(type = ifelse(.draw != 0, "Simulated", "Observed"))
 ```
 
-Question: can you tell what is off in the posterior predictive simulations for this example in model 1?
-
-Hint: look at the spread.
+And plot the output:
 
 ```{r}
 ggplot(pp1, aes(depth_m, .prediction, colour = type)) + geom_point() +
@@ -269,16 +331,36 @@ ggplot(pp3, aes(depth_m, .prediction, colour = type)) + geom_point() +
   ggtitle("Redbanded Rockfish: species-specific quadratic + error")
 ```
 
+Question: can you tell what is off in the posterior predictive simulations for this example in model 1?
+
+Hint: look at the spread.
+
+We can also visualize various statistical properties of our simulated and real observations. We'll focus on model 1 and 3 for brevity.
+
 ```{r}
 yrep1 <- posterior_predict(fit1)
 yrep3 <- posterior_predict(fit3)
+```
 
+Medians:
+
+```{r}
 ppc_stat_grouped(y, yrep1, stat = "median", group = d$fspecies)
 ppc_stat_grouped(y, yrep3, stat = "median", group = d$fspecies)
+```
 
+SD:
+
+```{r}
 ppc_stat_grouped(y, yrep1, stat = "sd", group = d$fspecies)
 ppc_stat_grouped(y, yrep3, stat = "sd", group = d$fspecies)
+```
 
+Question: why is this not a very useful check here?
+
+Interquartile range:
+
+```{r}
 iqr <- function(x) {
   q75 <- quantile(x, 0.75)
   q25 <- quantile(x, 0.25)
@@ -286,10 +368,17 @@ iqr <- function(x) {
 }
 ppc_stat_grouped(y, yrep1, stat = "iqr", group = d$fspecies)
 ppc_stat_grouped(y, yrep3, stat = "iqr", group = d$fspecies)
+```
 
-# what about by year?
+We might also wonder, might this relationship be changing through time? Should we have included a year covariate? We can check what our simulations say:
+
+```{r}
 ppc_stat_grouped(y, yrep1, stat = "median", group = d$year)
 ```
+
+We can plot the expected values from the prediction across a sequence of depths.
+
+First, we could take a sequence of draws from the posterior:
 
 ```{r}
 nd <- expand.grid(
@@ -303,6 +392,8 @@ ggplot(out, aes(logdepth, .epred, group = .draw)) +
   facet_wrap(~fspecies, scales = "free_y")
 ```
 
+Or we could summarize the distribution of those values:
+
 ```{r}
 lpred <- brms::posterior_epred(fit3, newdata = nd)
 nd$med <- apply(lpred, 2, median)
@@ -312,6 +403,8 @@ ggplot(nd, aes(logdepth, exp(med), colour = fspecies, fill = fspecies)) +
   geom_ribbon(aes(ymin = exp(lwr), ymax = exp(upr)), alpha = 0.2, colour = NA) +
   geom_line()
 ```
+
+What about the distribution of new observations? Are these more spread out? Why?
 
 ```{r}
 ppred <- brms::posterior_predict(fit3, newdata = nd)
@@ -323,6 +416,8 @@ ggplot(nd, aes(logdepth, exp(pp_med), colour = fspecies, fill = fspecies)) +
   geom_line()
 ```
 
+We can look at ELPD-LOO:
+
 ```{r}
 loo1 <- loo(fit1)
 loo2 <- loo(fit2)
@@ -330,11 +425,17 @@ loo3 <- loo(fit3)
 loo_compare(loo1, loo2, loo3)
 ```
 
+What does this tell us?
+
+We can also look at the pointwise LOO predictive densities themselves:
+
 ```{r}
 elpdi1 <- loo1$pointwise[, "elpd_loo"]
 elpdi2 <- loo2$pointwise[, "elpd_loo"]
 elpdi3 <- loo3$pointwise[, "elpd_loo"]
 ```
+
+And compare how good each model was at predicting each left-out point:
 
 ```{r}
 d$diff32 <- elpdi3 - elpdi2
@@ -350,3 +451,12 @@ ggplot(d, aes(logdepth, diff32, colour = fspecies, fill = fspecies)) +
   facet_wrap(~fspecies) +
   geom_hline(yintercept = 0, lty = 2)
 ```
+
+What can these tell us?
+
+# Questions:
+
+- What can we conclude from these data?
+- What of the above might we report in a paper?
+- What else might you consider adding to this model?
+- What are some possible uses for the posterior predictive simulations?
