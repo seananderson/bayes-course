@@ -6,11 +6,13 @@ output:
     toc_float: true
 ---
 
-how to find what priors are needed in brms and defaults
-how to specify specific parameters
-see influence of priors
-try a prior predictive check (pushforward and new obs)
-understand brms's treatment of intercepts
+# Goals:
+
+- Learn how to find what priors are needed in a given brms model and what the defaults are.
+- Learn how to specify priors in brms.
+- Learn how to see the influence of priors on the posterior.
+- Learn how to do a prior predictive check.
+- Learn how brms treats intercepts.
 
 ```{r}
 library(ggplot2)
@@ -18,7 +20,10 @@ library(dplyr)
 theme_set(theme_light())
 library(brms)
 dir.create("cache", showWarnings = FALSE)
+options(brms.file_refit = "on_change") # re-fit cached models if changes
 ```
+
+Let's create some fake data:
 
 ```{r}
 x <- 1:20
@@ -35,19 +40,29 @@ fake <- data.frame(x, y)
 ggplot(fake, aes(x, y)) + geom_point()
 ```
 
+If we wanted to fit a simple linear regression of y on x, we could find the default priors for the parameters with:
+
 ```{r}
 brms::default_prior(
   y ~ x, data = fake
 )
 ```
 
+If we fit out model with the default priors:
+
 ```{r}
 mod1 <- brm(y ~ x, data = fake, family = gaussian())
 ```
 
+We could find out what priors we used with:
+
 ```{r}
 get_prior(mod1)
 ```
+
+We should instead specify our own priors. We can do this with the `prior` argument.
+
+Note that by default, brms parameterizes the intercept as the intercept when the predictors are at their mean:
 
 ```{r, eval=FALSE}
 mod1 <- brm(y ~ x, data = fake, family = gaussian(),
@@ -61,6 +76,8 @@ mod1 <- brm(y ~ x, data = fake, family = gaussian(),
 )
 ```
 
+If instead we wanted to parameterize the intercept as the value of y when our predictors are 0, we would need to use the `0 + Intercept` syntax:
+
 ```{r}
 mod2 <- brm(y ~ 0 + Intercept + x, data = fake, family = gaussian(),
   file = "cache/priors2",
@@ -72,6 +89,8 @@ mod2 <- brm(y ~ 0 + Intercept + x, data = fake, family = gaussian(),
   sample_prior = "yes"
 )
 ```
+
+We can look at the what's happening in the Stan code:
 
 ```{r}
 stancode(mod1)
@@ -111,7 +130,7 @@ mod_prior_only <- brm(
 )
 ```
 
-```{r}
+```{r})
 prior_pushforward <- brms::posterior_epred(mod_prior_only)
 prior_predictive <- brms::posterior_predict(mod_prior_only)
 ```
@@ -126,9 +145,9 @@ ggplot(fake, aes(x, pf3)) + geom_point()
 ```
 
 ```{r}
-fake$pp1 <- prior_predictive[1,]
-fake$pp2 <- prior_predictive[2,]
-fake$pp3 <- prior_predictive[3,]
+fake$pp1 <- prior_predictive[2,]
+fake$pp2 <- prior_predictive[3,]
+fake$pp3 <- prior_predictive[4,]
 ggplot(fake, aes(x, pp1)) + geom_point()
 ggplot(fake, aes(x, pp2)) + geom_point()
 ggplot(fake, aes(x, pp3)) + geom_point()
