@@ -42,7 +42,7 @@ plot(df$x, yrep[1,])
 plot(df$x, yrep[2,])
 ```
 
-Answer: the model isn't creating the curvature in the values of `y` with respect to `x`. The model was fit as `y ~ x` but should is missing a quadratic term: `y ~ x + I(x^2)` or `y ~ x + poly(x, 2)`.
+Answer: the model isn't creating the curvature in the values of `y` with respect to `x`. The model was fit as `y ~ x` but is missing a quadratic term: `y ~ x + I(x^2)` or `y ~ x + poly(x, 2)`.
 
 # Exercise 2
 
