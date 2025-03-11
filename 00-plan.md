@@ -23,30 +23,6 @@ output:
 
 6. Leave with some ideas for where to find more information.
 
-### Stuff I want to make sure to cover that may not already be in the material:
-
-- What is the fundamental difference between Bayesian and frequentist approaches?
-   - Prior? No, not necessarily (although commonly, yes)
-   - It's about how we view probability and frequency
-   - Some good ideas here: https://stats.stackexchange.com/questions/22/bayesian-and-frequentist-reasoning-in-plain-english
-   
-- Software
-   - brms vs. rstanarm vs. rethinking vs. Stan vs. rstan vs. cmdstanr vs. TMB/RTMB 
-
-- Unspoken goal: empower people to work with Bayesian methods, give them the fundamentals to start from and an understanding of where to look to learn more
-
-- ESS: Bulk and Tail - what they mean, how calculated, threshold guidance
-- Split Rhat - what it means, how calculated, how different from non-split version, threshold guidance
-
-- Develop slides on:
- - Hamiltonian, NUTS
- - ESS, Rhat
- - Bayesian workflow paper
-
-- Develop exercises on:
- - Prior predictive and push forward checks
- - Somewhat more advanced Stan
-
 # Plan
 
 <!-- day 1 -->
