@@ -8,7 +8,7 @@ output:
 
 # Goals
 
-- Experiment with using posterior predictive checks to discover issues with a Bayesian probability model
+- Experiment with using posterior predictive checks to discover issues with a Bayesian probability model.
 
 # Setup
 
@@ -18,9 +18,12 @@ For each exercise, you'll read in two objects:
 - `df`: a data frame with a predictor `x` and observed values `y`. In some cases there may be an additional column defining groups `g`.
 - `yrep`: a matrix of posterior predictive simulated observations returned by `brms::posterior_predict()`. There are 20 rows (20 samples) by 100 or 200 columns (number of data points). 
 
-Use `bayesplot::ppc_*` functions (or make the plots yourself) to find the issues.
+Use `bayesplot::ppc_*` functions (or make the plots yourself) to find the issues. I've included the code here so you can focus on the interpretation.
 
-Does it look plausible that the model could have generated the observed data? If not, what is the issue, what might have caused it, and how you might you fix it? (You don't actually have to fix it for this exercise.)
+Answer the following questions:
+
+1. Does it look plausible that the model could have generated the observed data? 
+2. If not, what is the issue, what might have caused it, and how you might you fix it? (You don't actually have to fix it for this exercise!)
 
 # Exercise 1
 

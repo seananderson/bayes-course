@@ -6,9 +6,15 @@ output:
     toc_float: true
 ---
 
-For each of the following sets of MCMC chains, answer the following:
+# Goals 
 
-1. Are these samples consistent with convergence?
+- Gain experience diagnosing MCMC chains visually, with Rhat, and with ESS.
+
+# Exercise
+
+For each of the following sets of saved MCMC chains, answer the following:
+
+1. Do these samples appear consistent with convergence?
 2. What helped you come to that conclusion?
 
 If inconsistent with convergence, continue:
@@ -79,3 +85,4 @@ rstan::Rhat(samples_matrix)
 rstan::ess_bulk(samples_matrix)
 rstan::ess_tail(samples_matrix)
 ```
+

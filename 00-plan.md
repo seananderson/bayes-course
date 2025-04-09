@@ -25,7 +25,7 @@ output:
 
 # Plan
 
-<!-- day 1 -->
+## Day 1
 
 1. Introduction to probability, Bayes' theorem, when to go Bayesian
   - Slides: an introduction to Bayes' theorem and Bayesian updating
@@ -49,7 +49,7 @@ output:
     - first intro to posterior predictive checking
     - making probabilistic statements by manipulating the  posterior samples
 
-<!-- day 2 -->
+## Day 2
 
 4. Convergence and MCMC diagnostics
   - Slides: MCMC diagnostics part 1
@@ -67,7 +67,7 @@ output:
   - Slides: prior predictive checks
   - Rmd: brms priors and prior predictive checks
 
-<!-- day 3 -->
+## Day 3
 
 6. Introduction to Stan code and rstan
   - Slides: Stan model syntax
@@ -82,7 +82,7 @@ output:
   - Slides: cross-validation concepts and terms
   - Rmd: ELPD + LOO
   
-<!-- day 4 -->
+## Day 4
   
 7. Putting it all together: Bayesian workflow
   - discuss why and what the suggested steps are

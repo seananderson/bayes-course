@@ -15,7 +15,7 @@ output:
 
 Run this next code chunk once to generate our data.
 
-We are are simulating data with a given mean and standard deviation. We'll effectively be estimating an intercept-only model.
+We are are simulating data with a given mean and standard deviation. We'll effectively be estimating an intercept-only model with a known level of observation error.
 
 ```{r}
 set.seed(123)
@@ -46,37 +46,39 @@ Things to be aware of:
 
 Step through this carefully:
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 # our proposed next value in the chain:
 (proposal <- rnorm(1, previous_proposal, jump_sd))
 # ----------------------------------------------------------------
 
-# data likelihood:
+# data likelihood at our proposal:
 (log_like_proposal <- sum(dnorm(dat, mean = proposal, sd = sigma, log = TRUE)))
 (log_like_previous <- sum(dnorm(dat, mean = previous_proposal, sd = sigma, log = TRUE)))
 # ----------------------------------------------------------------
 
-# prior likelihood:
+# prior likelihood at our proposal:
 (log_like_prior_proposal <- dnorm(proposal, mean = 0, sd = 5, log = TRUE))
 (log_like_prior_previous <- dnorm(previous_proposal, mean = 0, sd = 5, log = TRUE))
 # ----------------------------------------------------------------
 
 # Combine the log-prior-likelihood with the log-data-likelihood to get a value
 # that is proportional to the posterior probability of that parameter value
-# given the data:
+# given the data.
+# Since we're in log space, we can add:
 (log_posterior_proposal <- log_like_prior_proposal + log_like_proposal)
 (log_posterior_previous <- log_like_prior_previous + log_like_previous)
 # ----------------------------------------------------------------
 
-# Calculate the ratio of the proposal and previous probabilities:
+# Calculate the ratio of the proposal and previous probabilities
+# Doing it in log space is computationally safer (avoids very small numbers).
 # (prob_ratio <- exp(log_posterior_proposal) / exp(log_posterior_previous))
 (prob_ratio <- exp(log_posterior_proposal - log_posterior_previous))
 # ----------------------------------------------------------------
 
-# If the probability ratio is > 1, then always accept the new parameter values.
+# If the probability ratio is > 1, then always accept the new parameter value(s).
 # If the probability ratio is < 1, then accept the new parameter values in
 # proportion to the ratio.
-if (runif(1) < prob_ratio) {
+if (runif(1) < prob_ratio) { # fancy trick to do the above
   print("Accept new proposal")
   (previous_proposal <- proposal)
 } else {
@@ -85,8 +87,9 @@ if (runif(1) < prob_ratio) {
 }
 # ----------------------------------------------------------------
 
-points(i, previous_proposal)
+points(i, previous_proposal) # plot our chosen value for this iteration
 i <- i + 1 # update counter for next proposal
+# now repeat!
 ```
 
 You now have an MCMC chain! The distribution of those values (if you take enough of them) will reflect the distribution of the parameter(s).
@@ -106,6 +109,7 @@ mcmc_example <- function(
   .n = 30, # number of data points to simulate
   prior_mu = 0, # our prior distribution mean
   prior_mu_sd = 10, # our prior distribution SD on the mean
+
   # Next, the SD of our jump function.
   # Too small a value and the chain might take a
   # very long time to get to the right parameter space or might get stuck in the

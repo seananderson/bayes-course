@@ -26,15 +26,18 @@ theme_set(theme_light())
 
 We will start by performing an experiment where we "sample" from a spinning globe and record whether a given finger lands on land `0` or water `1`.
 
-<https://earth3dmap.com/3d-globe/>
+In person: launch the beach ball!
+
+Online: <https://earth3dmap.com/3d-globe/>
 
 The goal is to estimate what proportion of the globe is covered in water.
 
-This example has some built-in data from a previous version of that experiment.
+This example has some built-in data from a previous version of that experiment. In person, we will replace it with the data we collect.
 
 ```{r}
 dat <- c(1, 0, 1, 1, 0, 1) # data we collected
 
+dat <- sample(0:1, size = 24, replace = T)
 p <- seq(0, 1, length.out = 200) # a sequence of 'proportions water' to evaluate
 
 # --------------------
@@ -72,11 +75,15 @@ ggplot(out, aes(x = p, ymax = posterior, ymin = 0, group = toss)) +
 
 In the above figure, the grey represents the prior distribution and red represents the posterior distribution. 
 
-In each panel, we add one observation to our data, take the posterior from the previous calculation and turn it into our new prior, multiply the prior by the data likelihood, and divide that by the sum of all likelihood * prior values to make sure our posterior sums to 1.
+In each panel, we add one observation to our data, take the posterior from the previous calculation and turn it into our new prior, multiply the prior by the data likelihood, and divide that by the sum of all likelihood times the prior values to make sure our posterior sums to 1.
+
+Questions:
+1. What effect does changing the prior have on the posterior for the first few data points?
+2. Does the posterior end up in a qualitatively different place with the different priors above?
 
 # Fitting all the data at once
 
-In the last example we updated are posterior with each additional piece of data. Let's do our calculations in a way that is more consistent with how we would probably do this experiment. We'll calculate the posterior distribution including all the data at once along with our initial prior.
+In the last example, we updated are posterior with each additional piece of data. Let's do our calculations in a way that is more consistent with how we would probably do this experiment. We'll calculate the posterior distribution including all the data at once along with our initial prior.
 
 Again, try playing with the prior.
 
@@ -109,11 +116,11 @@ Does that look the same as the final panel of the previous plot?
 
 # Summarizing the posterior with samples
 
-If we sample from the values of `p` in proportion to their probability, we will be drawing samples from the posterior. 
+If we sample from the values of `p` in proportion to their probability, we will be drawing samples from the posterior.
 
-This makes it really easy to summarize the posterior however we would like. It's just a matter of manipulating the samples. 
+This makes it easy to summarize the posterior however we would like: it's just a matter of manipulating the samples.
 
-This is also a good warmup practice because next we will be using Markov chain Monte Carlo (MCMC), which will always return samples from the posterior.
+This is a helpful warmup practice because next we will be using Markov chain Monte Carlo (MCMC), which will also return samples from the posterior.
 
 ```{r}
 post_samples <- sample(p, prob = posterior, size = 2000, replace = TRUE)
@@ -128,7 +135,7 @@ g <- ggplot(tibble(post_samples), aes(post_samples)) +
 g
 ```
 
-We can look at the means or the median of the posterior as one way to summarize it. 
+We can look at the means or the median of the posterior as one way to summarize it.
 
 ```{r}
 q <- mean(post_samples)
@@ -179,3 +186,4 @@ We can also easily calculate how much probability there is between specific valu
 mean(post_samples > 0.6 & post_samples < 0.8)
 g + geom_vline(xintercept = c(0.6, 0.8))
 ```
+

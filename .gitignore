@@ -44,3 +44,6 @@ original-files/
 *.key
 admin/
 extra/
+
+01-small-world_files/*
+dates.R

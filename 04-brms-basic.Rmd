@@ -6,12 +6,12 @@ output:
     toc_float: true
 ---
 
-# Objectives
+# Goals
 
 - Learn to fit pre-packaged Bayesian regression models with brms.
 - Gain initial exposure to posterior predictive checking and 
   manipulating posterior samples to calculate posterior probabilities.
-  
+
 # Setup
 
 Let's load dplyr, ggplot2, and brms 
@@ -388,13 +388,13 @@ We're taking advantage of the fact that R treats `TRUE` and `FALSE` as 1 and 0. 
 sum(ph2_samples < 0) / length(ph2_samples)
 ```
 
-What is the probability that the change in seahare mass is greater in the case where nutrients were not added? 
+What is the probability that the change in seahare mass is greater in the case where nutrients were not added?
 
 ```{r}
 mean(post$b_nutrients < 0)
 ```
 
-A major benefit to MCMC sampling of Bayesian models is how easy it is to quantify any comparison you want to make. 
+A major benefit to MCMC sampling of Bayesian models is how easy it is to quantify any comparison you want to make.
 
 For example, how much greater would you expect the change in seahare mass to be under conditions of the lowest pH tested without nutrients compared to the average pH condition with nutrients?
 
@@ -424,7 +424,7 @@ quantile(ratio, probs = c(0.11, 0.5, 0.89))
 mean(ratio > 1)
 ```
 
-What's the probabilty this ratio is greater than 1.5?
+What's the probability this ratio is greater than 1.5?
 
 ```{r}
 mean(ratio > 1.5)
