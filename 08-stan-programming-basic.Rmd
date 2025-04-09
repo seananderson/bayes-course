@@ -10,7 +10,7 @@ output:
 
 - Learn the basics of Stan model syntax and how to interact with Stan in R
 - Learn to generate our own posterior predictions from a Stan model 
-- Learn to calculate LOOIC from a Stan model we wrote ourselves
+- Learn how to calculate LOOIC from a Stan model we wrote ourselves
 
 # Setup 
 
@@ -33,7 +33,11 @@ library(dplyr)
 theme_set(theme_light())
 ```
 
+# Exercise
+
 Let's load the rstan R package, which lets us interact with R.
+
+As an aside, the cmdstanr is another option for interacting with Stan from R and has several advantages <https://mc-stan.org/cmdstanr/>.
 
 ```{r}
 library(rstan)
@@ -43,7 +47,7 @@ If we wanted, we could set our option to use parallel processing. This would be 
 
 ```{r}
 # options(mc.cores = parallel::detectCores())
-options(mc.cores = 1)
+options(mc.cores = 1) # default
 ```
 
 Another important option we can set with rstan is whether we want the compiled model to be saved so that we don't have to recompile it every time we run it. You probably want to set this because the compilation can take a while. 
@@ -82,6 +86,8 @@ show_file("stan/lm-simple.stan")
 ```
 
 This next version also has a generated quantity section. This is the one we will actually run. The generated quantities make it easier to do some things after like make posterior predictions. 
+
+We'll talk about these additions as a group.
 
 ```{r}
 show_file("stan/lm.stan")
@@ -142,13 +148,6 @@ bayesplot::mcmc_trace(fit_array, pars = pars)
 bayesplot::mcmc_dens_overlay(fit_array, pars = pars) # exercise
 ```
 
-Experiment with inspecting the posterior predictive distribution using the bayesplot package:
-
-```{r}
-pp <- extract(fit)$posterior_predictions
-bayesplot::ppc_dens_overlay(y = dat$y, yrep = pp[1:25, ])
-```
-
 # Manipulating the posterior samples ourselves
 
 ```{r}
@@ -175,11 +174,22 @@ ggplot(dat, aes(x, y)) + geom_point() +
 
 Is that starting to look like the confidence/credible intervals you are used to looking at?
 
-What if we wanted to look at posterior predictions? We can do that with the `posterior_predictions` samples that we created from the `generated quantities` section of our Stan model. We did that above. Let's do it in R to see how we could create them after.
+# Posterior predictive simulations
 
-In other words, how would we add on the observation component to our predictions? Let's manually create 8 draws from the posterior predictive distribution and compare them to our data. 
+We can experiment with inspecting the posterior predictive distribution using the bayesplot package:
 
-There are many ways you could do this. The following is one way. We will create a list with posterior predictions within data frames and then bind the elements of the list into a big data frame. We are doing this so it is easy to plot the output in ggplot.
+```{r}
+post <- rstan::extract(fit) # extract the posterior simulations as a list
+# grab the `posterior_predictions` from our `generated quantities` section:
+pp <- post$posterior_predictions
+bayesplot::ppc_dens_overlay(y = dat$y, yrep = pp[1:25, ])
+```
+
+Let's do it in R to see how we could create them after. The result is the same. The question is whether it is simpler to compute the posterior simulations with in the Stan code or in R.
+
+We need to form the prediction for each data point and add observation error. Let's manually create 8 draws from the posterior predictive distribution and compare them to our data. 
+
+There are many ways you could do this. The following is one way. We will create a list with posterior predictions within data frames and then bind the elements of the list into a big data frame. We are doing this so it is easy to plot the output with ggplot.
 
 ```{r}
 set.seed(1)
@@ -188,19 +198,29 @@ out <- list()
 for (i in seq_len(n_sim)) {
   out[[i]] <- tibble(x = x)
   out[[i]]$i <- i
-  out[[i]]$y_pp <- 
+  out[[i]]$y_pp <-
     rnorm(
-      n = length(x), 
-      mean = post$alpha[i] + post$beta[i] * x, 
-      sd = post$sigma[i])
+      n = length(x),
+      mean = post$alpha[i] + post$beta[i] * x,
+      sd = post$sigma[i]
+    )
 }
 out <- dplyr::bind_rows(out) # turn the list into a data.frame
 out$type <- "posterior prediction"
 
 # add the real data as the last panel:
-out <- dplyr::bind_rows(out, 
-  tibble(x = x, y_pp = y, type = "observed", i = 9))
+out <- dplyr::bind_rows(
+  out,
+  tibble(x = x, y_pp = y, type = "observed", i = 9)
+)
 
-ggplot(out, aes(x, y_pp, colour = type)) + geom_point() + 
+ggplot(out, aes(x, y_pp, colour = type)) +
+  geom_point() +
   facet_wrap(~i)
 ```
+
+## Questions:
+
+Which approach do you prefer in this case (Stan generated quantities vs. R code)? 
+
+When might you prefer one over the other approach?

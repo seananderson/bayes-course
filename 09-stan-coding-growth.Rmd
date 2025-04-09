@@ -9,8 +9,10 @@ output:
 # Goals:
 
 - Gain exposure to a non-linear model written in Stan that's more complicated than the simple linear regression.
-- See how we can do posterior (and prior) predictive simulations in a custom Stan model.
+- See how we can do prior predictive simulations in a custom Stan model.
 - Gain an initial exposure to Bayesian model comparison.
+
+# Setup
 
 ```{r, message=FALSE, warning=FALSE}
 library(rstan)
@@ -23,7 +25,9 @@ show_file <- function(file) {
 }
 ```
 
-These are Pacific Cod age and length data from two synoptic trawl surveys in BC.
+# Exercise
+
+These are Pacific Cod age and length data from two DFO synoptic trawl surveys in BC for Hecate Strait and West Coast Vancouver Island.
 
 ```{r}
 d <- readRDS("data/pcod-growth.rds")
@@ -32,11 +36,17 @@ ggplot(d, aes(age, length)) + geom_point() +
   facet_wrap(~survey)
 ```
 
-We will fit a von Bertalanffy growth model to them. Here's a simple version:
+We will fit a von Bertalanffy growth model to these data. Here's a simple version:
 
 ```{r}
 show_file("vb/vb_basic.stan")
 ```
+
+We will assume normally distributed observation error for simplicity (it's also relatively common). 
+
+Why is this technically not an ideal choice? 
+
+What would be some alternatives?
 
 This version has some more bells and whistles:
 
@@ -62,9 +72,11 @@ Sample from our model:
 fit1 <- stan("vb/vb_norm.stan", data = dat, iter = 1000, chains = 4, seed = 9129)
 ```
 
+Note that we set the `seed`` here. Why might we want to do that?
+
 Print the parameters of interest:
 
-Question: why am I specifying the parameters explicitly here?
+Why am I specifying the parameters explicitly here?
 
 ```{r}
 print(fit1, pars = c("k", "linf", "t0", "sigma"))
@@ -95,16 +107,22 @@ dim(sims_array)
 bayesplot::mcmc_trace(sims_array[,,1:4])
 ```
 
-Posterior predictions of new observations:
+Grab posterior predictions of new observations:
+
+We'll use `tidybayes::gather_draws()`, which conveniently gathers 20 MCMC samples for `length_sim` and forms a "long-format" data frame that is easy to work with in dplyr or ggplot. `[i]` tells the function to index each observation as `i` in the data frame.
+
+Again, I set the seed here. Why is that?
 
 ```{r}
 post <- tidybayes::gather_draws(fit1, length_sim[i], ndraws = 20, seed = 9283)
 head(post)
 
-# column 'i' was previously added to our data above
+# column 'i' was previously added to our data above so we can join on it:
 post <- left_join(post, d)
 ggplot(post, aes(age, .value)) + geom_point(alpha = 0.2)
 ```
+
+Question: what are we looking at?
 
 Expected length values:
 
@@ -117,6 +135,8 @@ ggplot(post, aes(age, .value, group = .draw)) + geom_line(alpha = 0.2) +
   geom_point(data = d, mapping = aes(age, length), inherit.aes = FALSE, alpha = 0.2)
 ```
 
+Question: what are we looking at?
+
 The parameter posteriors:
 
 ```{r}
@@ -126,7 +146,7 @@ ggplot(post, aes(.value)) + geom_histogram() +
   facet_wrap(~.variable, scales = "free_x")
 ```
 
-We can calculate ELPD (expected log predictive density) of a leave-one-out approximation because we included `log_lik` in our `generated quantities` section. It's not all that useful yet though, since we've only fit one model.
+We can calculate ELPD (expected log predictive density) of a leave-one-out approximation because we included `log_lik` in our `generated quantities` section. It's not all that useful yet though, since we've only fit one model. We'll dive more deeply into this elsewhere.
 
 ```{r}
 loo1 <- loo(fit1)
@@ -195,7 +215,7 @@ bayesplot::ppc_dens_overlay_grouped(y, yrep1, group = d$survey)
 bayesplot::ppc_dens_overlay_grouped(y, yrep2, group = d$survey)
 ```
 
-The `^` simply means the parameter must start with each of these patterns.
+The `^`s in the following "regular expressions" simply mean the parameters must start with each of these patterns.
 <https://xkcd.com/208/>
 
 ```{r}
@@ -228,7 +248,7 @@ hist(linf_diff)
 hist(t0_diff)
 ```
 
-# Excercise:
+# Exercise:
 
 Using those posterior draws, answer the following questions:
 

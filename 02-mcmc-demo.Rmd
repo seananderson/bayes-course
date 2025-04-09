@@ -28,8 +28,10 @@ plot(dat)
 Then this chunk will create a blank plot that we will fill in with our MCMC samples.
 
 ```{r}
-plot(1, xlim = c(0, 30), ylim = c(-2, 2), type = "n", ylab = expression(mu), 
-  xlab = "Chain iteration")
+plot(
+  1, xlim = c(0, 30), ylim = c(-2, 2), type = "n",
+  ylab = expression(mu), xlab = "Chain iteration"
+)
 jump_sd <- 1 # our chosen jumping standard deviation
 i <- 1 # starting iteration
 previous_proposal <- 0 # initial proposal value
@@ -46,7 +48,7 @@ Things to be aware of:
 
 Step through this carefully:
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 # our proposed next value in the chain:
 (proposal <- rnorm(1, previous_proposal, jump_sd))
 # ----------------------------------------------------------------
@@ -102,7 +104,7 @@ abline(h = mu, lty = 2) # our known true value
 
 The following code chunk contains the same code but embedded in a function so that we can call it repeatedly with different argument values. 
 
-```{r}
+```{r, eval=FALSE}
 mcmc_example <- function(
   mu = 4, # the true mean; we will estimate this
   sigma = 2, # the true residual SD; we will assume we know this for simplicity
@@ -195,7 +197,7 @@ mcmc_example <- function(
 
 Now, we'll call our function, which by default will take 10,000 MCMC samples:
 
-```{r}
+```{r, eval=FALSE}
 mcmc_example()
 ```
 
