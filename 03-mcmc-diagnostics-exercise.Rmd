@@ -20,8 +20,7 @@ For each of the following sets of saved MCMC chains, answer the following:
 If inconsistent with convergence, continue:
 
 3. What might have caused this scenario?
-4. Can the MCMC sampling likely be improved without adjusting the model?
-5. If so, what might improve the MCMC sampling?
+4. Can the MCMC sampling likely be improved without adjusting the model? How?
 
 ```{r mcmc-chains1}
 samples <- readRDS(here::here("data/mcmc1.rds"))
@@ -33,6 +32,11 @@ rstan::ess_bulk(samples_matrix)
 rstan::ess_tail(samples_matrix)
 ```
 
+1. No <!-- exercise -->
+2. Rhat a bit high, ESS a bit low, strong autocorrelation apparent in chains <!-- exercise -->
+3. Chains not run for long enough <!-- exercise -->
+4. Possibly just running for longer; no thinning needed! <!-- exercise -->
+
 ```{r mcmc-chains2}
 samples <- readRDS(here::here("data/mcmc2.rds"))
 samples_matrix <- do.call(cbind, samples)
@@ -42,6 +46,11 @@ rstan::Rhat(samples_matrix)
 rstan::ess_bulk(samples_matrix)
 rstan::ess_tail(samples_matrix)
 ```
+
+1. No <!-- exercise -->
+2. Chains drifting, Rhat high, ESS low <!-- exercise -->
+3. Possibly not enough warmup and starting points not dispersed enough <!-- exercise -->
+4. Longer warmup? <!-- exercise -->
 
 ```{r mcmc-chains3}
 samples <- readRDS(here::here("data/mcmc3.rds"))
@@ -54,6 +63,11 @@ rstan::ess_bulk(samples_matrix)
 rstan::ess_tail(samples_matrix)
 ```
 
+1. No <!-- exercise -->
+2. One chain has larger variance <!-- exercise -->
+3. Some chains may be getting stuck and not exploring posterior <!-- exercise -->
+4. May be harder. Tighter priors, re-parameterized model, simplified model? <!-- exercise -->
+
 ```{r mcmc-chains4}
 samples <- readRDS(here::here("data/mcmc4.rds"))
 samples_matrix <- do.call(cbind, samples)
@@ -64,6 +78,11 @@ rstan::Rhat(samples_matrix)
 rstan::ess_bulk(samples_matrix)
 rstan::ess_tail(samples_matrix)
 ```
+
+1. Yes <!-- exercise -->
+2. ESS > 400, Rhat < 1.01, chains look good <!-- exercise -->
+3. NA <!-- exercise -->
+4. NA <!-- exercise -->
 
 ```{r mcmc-chains5}
 samples <- readRDS(here::here("data/mcmc5.rds"))
@@ -76,6 +95,11 @@ rstan::ess_tail(samples_matrix)
 bayesplot::mcmc_dens_overlay(samples)
 ```
 
+1. No <!-- exercise -->
+2. Chains have different means <!-- exercise -->
+3. Might still reflect dispersed starting points without enough warmup? Model might be weakly identified? <!-- exercise -->
+4. Longer warmup? Simplify model? More data? <!-- exercise -->
+
 ```{r mcmc-chains6}
 samples <- readRDS(here::here("data/mcmc6.rds"))
 samples_matrix <- do.call(cbind, samples)
@@ -86,3 +110,7 @@ rstan::ess_bulk(samples_matrix)
 rstan::ess_tail(samples_matrix)
 ```
 
+1. No <!-- exercise -->
+2. Chain behaviour at beginning looks different, autocorrelation may be high <!-- exercise -->
+3. Might have forgot to remove warmup or not run warmup for long enough? <!-- exercise -->
+4. Discard warmup, warmup long enough, ... <!-- exercise -->

@@ -38,7 +38,7 @@ We are going to work with data from:
 
 Hughes, B.B., Lummis, S.C., Anderson, S.C., and Kroeker, K.J. 2018. Unexpected resilience of a seagrass system exposed to global stressors. Glob. Change Biol. 24(1): 224–234. <https://doi.org/10.1111/gcb.13854>
 
-The data come from a mesocosm experiment by Brent Hughes where he manipulated water pH and whether or not nutrients were added (to represent nutrient loads in eelgrass beds) to 14 200L barrels. He measured a number of variables, but the response variable we are going to work with here is the increase in mass of seahares (*Phyllaplysia taylori*), a type of sea slug, after 24 days.
+The data come from a mesocosm experiment by Brent Hughes where he manipulated water pH and whether or not nutrients were added (to represent nutrient loads in eelgrass beds) to 14 200 L barrels. He measured several variables, but the response variable we are going to work with here is the increase in mass of seahares (*Phyllaplysia taylori*), a type of sea slug, after 24 days.
 
 ```{r}
 d <- readRDS("data/hughes-etal-2018.rds") |>
@@ -120,9 +120,9 @@ Bonus questions:
 7. Can you get `summary.brmsfit()` to return 87% CIs?
 
 ```{r}
-summary(fit, robust = TRUE)
-summary(fit, priors = TRUE)
-summary(fit, prob = 0.87)
+summary(fit, robust = TRUE) # exercise
+summary(fit, priors = TRUE) # exercise
+summary(fit, prob = 0.87) # exercise
 ```
 
 There are a lot of helper functions in brms to explore. Here are a few useful ones:

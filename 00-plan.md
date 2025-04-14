@@ -41,31 +41,31 @@ output:
   - Hamiltonian and NUTS slides
   - *Individual exercise*: play with online demo of Hamiltonian and NUTS MCMC
 
-3. Introduction to applied Bayesian modeling
+3. Convergence and MCMC diagnostics
+  - Slides: MCMC diagnostics part 1
+  - *Small groups exercise*: MCMC diagnostics
+  - Slides: divergent transitions
+  - Rmd: divergent transitions
+  
+## Day 2
+
+4. Posterior predictive checking
+  - Slides: posterior predictive checking
+  - *Small groups exercise*: posterior predictive checking
+
+5. Priors (interactive code, slides, and discussion)
+  - Slides: goals of priors, types of priors
+  - *Small groups exercise*: experiment with an interactive prior demo
+  - Slides: prior predictive checks
+  - Rmd: brms priors and prior predictive checks
+  
+6. Introduction to applied Bayesian modeling
   - Rmd: 04-brms-basic.Rmd
     - fit a regression model with brms 
     - inspect MCMC chains for convergence
     - summarize MCMC chains to quantify the posterior
     - first intro to posterior predictive checking
     - making probabilistic statements by manipulating the  posterior samples
-
-## Day 2
-
-4. Convergence and MCMC diagnostics
-  - Slides: MCMC diagnostics part 1
-  - *Small groups exercise*: MCMC diagnostics
-  - Slides: divergent transitions
-  - Rmd: divergent transitions
-
-5. Posterior predictive checking
-  - Slides: posterior predictive checking
-  - *Small groups exercise*: posterior predictive checking
-
-6. Priors (interactive code, slides, and discussion)
-  - Slides: goals of priors, types of priors
-  - *Small groups exercise*: experiment with an interactive prior demo
-  - Slides: prior predictive checks
-  - Rmd: brms priors and prior predictive checks
 
 ## Day 3
 

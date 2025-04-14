@@ -79,7 +79,7 @@ Step through this carefully:
 
 # If the probability ratio is > 1, then always accept the new parameter value(s).
 # If the probability ratio is < 1, then accept the new parameter values in
-# proportion to the ratio.
+# proportion to the ratio of proposal probability / previous probability
 if (runif(1) < prob_ratio) { # fancy trick to do the above
   print("Accept new proposal")
   (previous_proposal <- proposal)
