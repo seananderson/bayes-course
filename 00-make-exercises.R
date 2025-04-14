@@ -1,4 +1,4 @@
-files <- list.files(".", pattern = "*.Rmd|*.R")
+files <- list.files(".", pattern = "*.Rmd$|*.R$")
 
 dir.create("exercise-files", showWarnings = FALSE)
 remove_exercises <- function(x) {
