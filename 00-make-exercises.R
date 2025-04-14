@@ -1,4 +1,4 @@
-files <- list.files(".", pattern = "*.Rmd")
+files <- list.files(".", pattern = "*.Rmd|*.R")
 
 dir.create("exercise-files", showWarnings = FALSE)
 remove_exercises <- function(x) {
@@ -10,5 +10,3 @@ remove_exercises <- function(x) {
   writeLines(as.character(f_ex), con = file.path("exercise-files", x))
 }
 purrr::walk(files, remove_exercises)
-
-# purrr::walk(files, rmarkdown::render)
