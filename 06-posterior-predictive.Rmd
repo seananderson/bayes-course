@@ -33,8 +33,6 @@ df <- readRDS("data/ppcheck-df1.rds")
 yrep <- readRDS("data/ppcheck-yrep1.rds")
 ```
 
-Hint: try visualizations of `df$y` and `yrep` values against `x`.
-
 ```{r}
 y <- df$y
 bayesplot::ppc_dens_overlay(y, yrep)
@@ -47,7 +45,7 @@ plot(df$x, yrep[1,])
 plot(df$x, yrep[2,])
 ```
 
-Answer: the model isn't creating the curvature in the values of `y` with respect to `x`. The model was fit as `y ~ x` but is missing a quadratic term: `y ~ x + I(x^2)` or `y ~ x + poly(x, 2)`.
+Answer: the model isn't creating the curvature in the values of `y` with respect to `x`. The model was fit as `y ~ x` but is missing a quadratic term: `y ~ x + I(x^2)` or `y ~ x + poly(x, 2)`. <!-- exercise -->
 
 # Exercise 2
 
@@ -65,7 +63,7 @@ plot(df$x, yrep[2,])
 bayesplot::ppc_dens_overlay(y, yrep)
 ```
 
-Answer: the model is isn't creating enough spread in the data for larger values of `x`. The observation error distribution assumptions look off. These data were generated from a negative binomial model but were fit with a Poisson likelihood.
+Answer: the model is isn't creating enough spread in the data for larger values of `x`. The observation error distribution assumptions look off. These data were generated from a negative binomial model but were fit with a Poisson likelihood.  <!-- exercise -->
 
 # Exercise 3
 
@@ -93,4 +91,5 @@ ggplot(df, aes(x, y, colour = g)) + geom_point()
 ggplot(df, aes(x, yrep2, colour = g)) + geom_point()
 ```
 
-Answer: the model is lacking random intercept by group `g`. The posterior simulations therefore lack the clumping of observations seen in the observed data.
+Answer: the model is lacking random intercept by group `g`. The posterior simulations therefore lack the clumping of observations seen in the observed data.  <!-- exercise -->
+
