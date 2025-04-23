@@ -100,7 +100,7 @@ The first time we run the next code chunk, Stan will translate our model into C+
 Let's sample from the model now:
 
 ```{r, message=FALSE, results='hide'}
-fit <- stan("stan/lm.stan", chains = 4, iter = 2000,
+fit <- stan(here::here("stan/lm.stan"), chains = 4, iter = 2000, seed = 39382,
   data = list(x = dat$x, y = dat$y, N = length(dat$y)))
 ```
 
@@ -164,12 +164,12 @@ dim(post$beta)
 Let's overlay some model fits from the posterior on the data:
 
 ```{r}
-N <- 100
+N <- 200
 ggplot(dat, aes(x, y)) + geom_point() +
   geom_abline(
     intercept = post$alpha[1:N], 
     slope = post$beta[1:N], 
-    alpha = 0.2)
+    alpha = 0.1)
 ```
 
 Is that starting to look like the confidence/credible intervals you are used to looking at?

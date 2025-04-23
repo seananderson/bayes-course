@@ -132,7 +132,7 @@ mod_prior_only <- brm(
 )
 ```
 
-```{r})
+```{r}
 prior_pushforward <- brms::posterior_epred(mod_prior_only)
 prior_predictive <- brms::posterior_predict(mod_prior_only)
 ```

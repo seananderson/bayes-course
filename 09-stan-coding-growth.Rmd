@@ -30,7 +30,7 @@ show_file <- function(file) {
 These are Pacific Cod age and length data from two DFO synoptic trawl surveys in BC for Hecate Strait and West Coast Vancouver Island.
 
 ```{r}
-d <- readRDS("data/pcod-growth.rds")
+d <- readRDS(here::here("data/pcod-growth.rds"))
 d$i <- seq_len(nrow(d))
 ggplot(d, aes(age, length)) + geom_point() +
   facet_wrap(~survey)
@@ -69,7 +69,7 @@ dat <- list(
 Sample from our model:
 
 ```{r, results="hide", message=FALSE}
-fit1 <- stan("vb/vb_norm.stan", data = dat, iter = 1000, chains = 4, seed = 9129)
+fit1 <- stan(here::here("vb/vb_norm.stan"), data = dat, iter = 1000, chains = 4, seed = 9129)
 ```
 
 Note that we set the `seed`` here. Why might we want to do that?
@@ -168,7 +168,7 @@ unique(as.integer(factor(d$survey)))
 dat2$survey_id <- as.integer(factor(d$survey))
 dat2$N_surveys <- 2
 
-fit2 <- stan("vb/vb_norm_regions.stan", data = dat2, iter = 1000, chains = 4, seed = 9129)
+fit2 <- stan(here::here("vb/vb_norm_regions.stan"), data = dat2, iter = 1000, chains = 4, seed = 9129)
 ```
 
 ```{r}

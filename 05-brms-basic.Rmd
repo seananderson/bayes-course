@@ -41,7 +41,7 @@ Hughes, B.B., Lummis, S.C., Anderson, S.C., and Kroeker, K.J. 2018. Unexpected r
 The data come from a mesocosm experiment by Brent Hughes where he manipulated water pH and whether or not nutrients were added (to represent nutrient loads in eelgrass beds) to 14 200 L barrels. He measured several variables, but the response variable we are going to work with here is the increase in mass of seahares (*Phyllaplysia taylori*), a type of sea slug, after 24 days.
 
 ```{r}
-d <- readRDS("data/hughes-etal-2018.rds") |>
+d <- readRDS(here::here("data/hughes-etal-2018.rds")) |>
   filter(label == "Change in seahare mass (g FW)") |> 
   rename(change_seahare_mass_g_fw = value) |> 
   dplyr::select(-label, -figure_panel, -nutrients_text, -response)

@@ -264,7 +264,7 @@ There's no reason we have to use that. We can also just work with ELPD. Note tha
 We will work with a regression on a dataset of child IQ sores, mom IQ scores, and other covariates such as whether the mom finished highschool. It's from the Regression and Other Stories book and originally from the National Longitudinal Survey of Youth.
 
 ```{r }
-kidiq <- readRDS("data/kidiq.rds")
+kidiq <- readRDS(here::here("data/kidiq.rds"))
 ```
 
 Linear regression with mom highschool and IQ as predictors of child IQ:

@@ -52,7 +52,7 @@ model {
 Fit the model with Stan:
 
 ```{r, message=FALSE, warning=FALSE, results='hide'}
-mod1 <- stan("stan/8schools.stan", data = dat, seed = 9283)
+mod1 <- stan(here::here("stan/8schools.stan"), data = dat, seed = 9283)
 ```
 
 ```{r}
@@ -111,7 +111,7 @@ model {
 Everything not commented is the same as before. We now have a Normal(0, 1) variable `eta` that we multiply by `sigma_prime`. We have the same probability model, but now the sampler is tracking `sigma_prime` and `eta`, which are uncorrelated, so it has less of a problem exploring the full posterior. This approach is often called a 'non-centered parameterization'.
 
 ```{r, message=FALSE, warning=FALSE, results='hide'}
-mod2 <- stan("stan/8schools_noncentered.stan", data = dat, seed = 9283)
+mod2 <- stan(here::here("stan/8schools_noncentered.stan"), data = dat, seed = 9283)
 ```
 
 ```{r}
@@ -131,7 +131,7 @@ That's much better and out divergences do not appear to be systematically where 
 
 ```{r, message=FALSE, warning=FALSE, results='hide'}
 mod3 <- stan(
-  "stan/8schools_noncentered.stan", data = dat, seed = 9283, 
+  here::here("stan/8schools_noncentered.stan"), data = dat, seed = 9283, 
   control = list(adapt_delta = 0.95)
 )
 ```

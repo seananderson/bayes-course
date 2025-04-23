@@ -29,8 +29,8 @@ Answer the following questions:
 # Exercise 1
 
 ```{r}
-df <- readRDS("data/ppcheck-df1.rds")
-yrep <- readRDS("data/ppcheck-yrep1.rds")
+df <- readRDS(here::here("data/ppcheck-df1.rds"))
+yrep <- readRDS(here::here("data/ppcheck-yrep1.rds"))
 ```
 
 ```{r}
@@ -50,8 +50,8 @@ Answer: the model isn't creating the curvature in the values of `y` with respect
 # Exercise 2
 
 ```{r}
-df <- readRDS("data/ppcheck-df2.rds")
-yrep <- readRDS("data/ppcheck-yrep2.rds")
+df <- readRDS(here::here("data/ppcheck-df2.rds"))
+yrep <- readRDS(here::here("data/ppcheck-yrep2.rds"))
 ```
 
 ```{r}
@@ -68,8 +68,8 @@ Answer: the model is isn't creating enough spread in the data for larger values 
 # Exercise 3
 
 ```{r}
-df <- readRDS("data/ppcheck-df3.rds")
-yrep <- readRDS("data/ppcheck-yrep3.rds")
+df <- readRDS(here::here("data/ppcheck-df3.rds"))
+yrep <- readRDS(here::here("data/ppcheck-yrep3.rds"))
 ```
 
 Hint: try visualizing the posterior predictive simulations grouped or coloured by column `g`.

@@ -35,9 +35,9 @@ The goal is to estimate what proportion of the globe is covered in water.
 This example has some built-in data from a previous version of that experiment. In person, we will replace it with the data we collect.
 
 ```{r}
-dat <- c(1, 0, 1, 1, 0, 1) # data we collected
+dat <- c(1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1) # data we collected
 
-dat <- sample(0:1, size = 24, replace = T)
+# dat <- sample(0:1, size = 24, replace = T)
 p <- seq(0, 1, length.out = 200) # a sequence of 'proportions water' to evaluate
 
 # --------------------

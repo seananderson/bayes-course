@@ -29,7 +29,7 @@ dir.create("cache", showWarnings = FALSE)
 These are rockfish densities from DFO's synoptic bottom trawl surveys off BC. I've only included densities for tows where that rockfish was caught. I.e., I've removed the zeros so we can work with a simple Gaussian model of log transformed rockfish densities.
 
 ```{r}
-d <- readRDS("data/rockfish-depth.rds")
+d <- readRDS(here::here("data/rockfish-depth.rds"))
 d$logdepth <- as.numeric(scale(log(d$depth_m)))
 d$fyear <- factor(d$year)
 d$fspecies <- factor(d$species_common_name)
