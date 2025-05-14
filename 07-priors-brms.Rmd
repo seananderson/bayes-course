@@ -70,7 +70,7 @@ Note that by default, brms parameterizes the intercept as the intercept when the
 mod1 <- brm(y ~ x, data = fake, family = gaussian(),
   file = "cache/priors1",
   prior = c(
-    set_prior("normal(0, 1)", class = "Intercept"),
+    set_prior("normal(0, 5)", class = "Intercept"),
     set_prior("normal(0, 1)", class = "b"),
     set_prior("student_t(3, 0, 3)", class = "sigma")
   ),
@@ -84,7 +84,7 @@ If instead we wanted to parameterize the intercept as the value of y when our pr
 mod2 <- brm(y ~ 0 + Intercept + x, data = fake, family = gaussian(),
   file = "cache/priors2",
   prior = c(
-    set_prior("normal(0, 1)", class = "b", coef = "Intercept"),
+    set_prior("normal(0, 5)", class = "b", coef = "Intercept"),
     set_prior("normal(0, 1)", class = "b", coef = "x"),
     set_prior("student_t(3, 0, 3)", class = "sigma")
   ),
@@ -103,13 +103,11 @@ stancode(mod2)
 sims1 <- as_draws_df(mod1)
 mean(sims1$b_Intercept)
 mean(sims1$Intercept)
-mean(fake$y)
 ```
 
 ```{r}
 sims2 <- as_draws_df(mod2)
 mean(sims2$b_Intercept)
-mean(fake$y)
 ```
 
 ```{r}
