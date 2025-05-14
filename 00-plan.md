@@ -44,32 +44,32 @@ output:
 3. Convergence and MCMC diagnostics
   - Slides: MCMC diagnostics part 1
   - *Small groups exercise*: MCMC diagnostics
-  - Slides: divergent transitions
-  - Rmd: divergent transitions
+  
+4. Priors (interactive code, slides, and discussion)
+  - Slides: goals of priors, types of priors
+  - *Small groups exercise*: experiment with an interactive prior demo
   
 ## Day 2
 
-4. Posterior predictive checking
-  - Slides: posterior predictive checking
-  - *Small groups exercise*: posterior predictive checking
+Recap
 
-5. Priors (interactive code, slides, and discussion)
-  - Slides: goals of priors, types of priors
-  - *Small groups exercise*: experiment with an interactive prior demo
-  - Slides: prior predictive checks
-  - Rmd: brms priors and prior predictive checks
+5. Posterior and prior predictive checking
+  - Slides: predictive checking
+  - *Small groups exercise*: posterior predictive checking
   
 6. Introduction to applied Bayesian modeling
-  - Rmd: 04-brms-basic.Rmd
+  - Rmd: brms-basic.Rmd
     - fit a regression model with brms 
     - inspect MCMC chains for convergence
     - summarize MCMC chains to quantify the posterior
     - first intro to posterior predictive checking
     - making probabilistic statements by manipulating the  posterior samples
 
+7. Rmd: brms priors and prior predictive checks
+
 ## Day 3
 
-6. Introduction to Stan code and rstan
+8. Introduction to Stan code and rstan
   - Slides: Stan model syntax
   - Rmd: regression with a Stan model
   - understand when/why you might use brms vs. custom Stan code
@@ -78,18 +78,22 @@ output:
   - extract the posterior samples and make similar plots as before
   - fit an length-age growth model to groundfish data and summarize the output
 
-7. Leave-one-out cross validation, log scores, and ELPD
+9. Leave-one-out cross validation, log scores, and ELPD
   - Slides: cross-validation concepts and terms
   - Rmd: ELPD + LOO
   
 ## Day 4
+
+10. Divergent transitions
+  - Slides: divergent transitions
+  - Rmd: divergent transitions
   
-7. Putting it all together: Bayesian workflow
+11. Putting it all together: Bayesian workflow
   - discuss why and what the suggested steps are
   - *All together exercise*: work through an example as a group
   - *Small groups exercise*: work through an example as an exercise
 
-8. Applied Bayesian modeling standards, words of wisdom, and resources (slides)
+12. Applied Bayesian modeling standards, words of wisdom, and resources (slides)
   - standards for iterations, warmup, chains, and assessing convergence
   - Stan warnings to watch out for
   - how to describe the models
