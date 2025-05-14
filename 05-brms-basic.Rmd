@@ -122,7 +122,7 @@ Bonus questions:
 ```{r}
 summary(fit, robust = TRUE) # exercise
 summary(fit, priors = TRUE) # exercise
-summary(fit, prob = 0.87) # exercise
+summary(fit, prob = 0.89) # exercise
 ```
 
 There are a lot of helper functions in brms to explore. Here are a few useful ones:
@@ -142,7 +142,8 @@ There are many available plotting functions in the bayesplot package. Before we 
 The primary way of looking at MCMC chains is as overlaid time series:
 
 ```{r}
-bayesplot::mcmc_trace(fit)
+bayesplot::mcmc_trace(fit, pars = "b_nutrients")
+bayesplot::mcmc_trace(fit, regex_pars = "^b_|sigma")
 ```
 
 How does that look to you? 
@@ -240,10 +241,10 @@ bayesplot::available_mcmc()
 Experiment with the available plotting functions to summarize the posterior probabilities of the parameters in our model. Which do you find most useful here? 
 
 ```{r}
-bayesplot::mcmc_areas(fit) # exercise
-bayesplot::mcmc_intervals(fit) # exercise
-bayesplot::mcmc_combo(fit) # exercise
-bayesplot::mcmc_areas_ridges(fit) # exercise
+bayesplot::mcmc_areas(fit, regex_pars = "^b_|sigma") # exercise
+bayesplot::mcmc_intervals(fit, regex_pars = "^b_|sigma") # exercise
+bayesplot::mcmc_combo(fit, regex_pars = "^b_|sigma") # exercise
+bayesplot::mcmc_areas_ridges(fit, regex_pars = "^b_|sigma") # exercise
 ```
 
 - What does the `(Intercept)` coefficient represent?
@@ -278,7 +279,7 @@ Let's compare the full posterior distribution for a parameter to its prior as an
 For models fit with brms, we can extract the posterior samples with `as.data.frame()` or `as.matrix()`. Let's use the data frame version. We'll also convert to a tibble, just so that it prints nicely.
 
 ```{r}
-post <- as_tibble(as.data.frame(fit))
+post <- as.data.frame(fit)
 post
 ```
 
@@ -370,7 +371,7 @@ One of the nice things about Bayesian statistical models is that we can quantify
 As a reminder, `post` comes from:
 
 ```{r}
-post <- as_tibble(as.data.frame(fit))
+post <- as.data.frame(fit)
 post
 ```
 
