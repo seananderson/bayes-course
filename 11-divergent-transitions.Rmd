@@ -127,7 +127,7 @@ bayesplot::mcmc_scatter(
 )
 ```
 
-That's much better and out divergences do not appear to be systematically where we might worry about them (although that's harder to say with more complicated models). We can improve this further by increasing the `adapt_delta` from its default 0.8 towards 1:
+That's much better and our divergences do not appear to be systematically where we might worry about them (although that's harder to say with more complicated models). We can improve this further by increasing the `adapt_delta` from its default 0.8 towards 1:
 
 ```{r, message=FALSE, warning=FALSE, results='hide'}
 mod3 <- stan(
